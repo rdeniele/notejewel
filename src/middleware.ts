@@ -12,93 +12,106 @@ export const config = {
 };
 
 export async function updateSession(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({
-    request,
-  });
+  try {
+    let supabaseResponse = NextResponse.next({
+      request,
+    });
 
-  const supabase = createServerClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value),
-          );
-          supabaseResponse = NextResponse.next({
-            request,
-          });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options),
-          );
+    const supabase = createServerClient(
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value }) =>
+              request.cookies.set(name, value),
+            );
+            supabaseResponse = NextResponse.next({
+              request,
+            });
+            cookiesToSet.forEach(({ name, value, options }) =>
+              supabaseResponse.cookies.set(name, value, options),
+            );
+          },
         },
       },
-    },
-  );
+    );
 
-  const isAuthRoute =
-    request.nextUrl.pathname === "/login" ||
-    request.nextUrl.pathname === "/sign-up";
+    const isAuthRoute =
+      request.nextUrl.pathname === "/login" ||
+      request.nextUrl.pathname === "/sign-up";
 
-  if (isAuthRoute) {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (user) {
-      return NextResponse.redirect(
-        new URL("/", process.env.NEXT_PUBLIC_BASE_URL),
-      );
-    }
-  }
-
-  const { searchParams, pathname } = new URL(request.url);
-
-  if (!searchParams.get("noteId") && pathname === "/") {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (user) {
-      const { newestNoteId } = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/fetch-newest-note?userId=${user.id}`,
-      ).then(async (response) => {
-        // Look for something like this that might be causing the issue:
-        // const data = await response.json(); // This line might be failing
-
-        // Make sure to check the response content-type before parsing:
-        if (response.headers.get("content-type")?.includes("application/json")) {
-          const data = await response.json();
-          return data;
-        } else {
-          // Handle non-JSON response
-          const text = await response.text();
-          return { newestNoteId: text }; // or handle it in a way that suits your app
-        }
-      });
-
-      if (newestNoteId) {
-        const url = request.nextUrl.clone();
-        url.searchParams.set("noteId", newestNoteId);
-        return NextResponse.redirect(url);
-      } else {
-        const { noteId } = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/create-new-note?userId=${user.id}`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          },
-        ).then((res) => res.json());
-        const url = request.nextUrl.clone();
-        url.searchParams.set("noteId", noteId);
-        return NextResponse.redirect(url);
+    if (isAuthRoute) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        return NextResponse.redirect(
+          new URL("/", process.env.NEXT_PUBLIC_BASE_URL),
+        );
       }
     }
-  }
 
-  return supabaseResponse;
+    const { searchParams, pathname } = new URL(request.url);
+
+    if (!searchParams.get("noteId") && pathname === "/") {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        const { newestNoteId } = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/fetch-newest-note?userId=${user.id}`,
+        ).then(async (response) => {
+          // Check if response is ok and content-type is JSON
+          if (!response.ok) {
+            console.error('API response not ok:', response.status, response.statusText);
+            return { newestNoteId: null };
+          }
+          
+          const contentType = response.headers.get("content-type");
+          if (contentType && contentType.includes("application/json")) {
+            try {
+              return await response.json();
+            } catch (error) {
+              console.error('JSON parsing error:', error);
+              return { newestNoteId: null };
+            }
+          } else {
+            console.error('Response is not JSON:', await response.text());
+            return { newestNoteId: null };
+          }
+        });
+
+        if (newestNoteId) {
+          const url = request.nextUrl.clone();
+          url.searchParams.set("noteId", newestNoteId);
+          return NextResponse.redirect(url);
+        } else {
+          const { noteId } = await fetch(
+            `${process.env.NEXT_PUBLIC_BASE_URL}/api/create-new-note?userId=${user.id}`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            },
+          ).then((res) => res.json());
+          const url = request.nextUrl.clone();
+          url.searchParams.set("noteId", noteId);
+          return NextResponse.redirect(url);
+        }
+      }
+    }
+
+    return supabaseResponse;
+  } catch (error) {
+    console.error('Middleware error:', error);
+    return NextResponse.next({
+      request,
+    });
+  }
 }
