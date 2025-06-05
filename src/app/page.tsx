@@ -20,14 +20,14 @@ async function HomePage({searchParams}:Props){
   })
 
   return (
-    <div className="flex h-full flex-col items-center gap-6 p-6">
-      <div className="flex w-full max-w-5xl items-center justify-between">
+    <div className="flex h-full flex-col items-center gap-4 sm:gap-6 p-3 sm:p-6">
+      <div className="flex w-full max-w-5xl flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0">
         <div className="flex items-center gap-4">
-          <h2 className="text-2xl font-semibold text-foreground/80">My Notes</h2>
-          <div className="h-6 w-px bg-border" />
-          <p className="text-sm text-muted-foreground">Capture your thoughts and ideas</p>
+          <h2 className="text-xl sm:text-2xl font-semibold text-foreground/80">My Notes</h2>
+          <div className="hidden sm:block h-6 w-px bg-border" />
+          <p className="hidden sm:block text-sm text-muted-foreground">Capture your thoughts and ideas</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <AskAIButton user={user}/>
           <NewNoteButton user={user}/>
         </div>

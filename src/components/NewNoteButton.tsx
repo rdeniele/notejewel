@@ -7,6 +7,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
 import { createNoteAction } from "@/actions/notes";
+import { toast } from "sonner";
 
 type Props = {
   user: User | null;
@@ -14,7 +15,6 @@ type Props = {
 
 function NewNoteButton({ user }: Props) {
   const router = useRouter();
-
   const [loading, setLoading] = useState(false);
 
   const handleClickNewNoteButton = async () => {
@@ -22,12 +22,22 @@ function NewNoteButton({ user }: Props) {
       router.push("/login");
     } else {
       setLoading(true);
-
       const uuid = uuidv4();
-      await createNoteAction(uuid);
+
+      // Optimistically update the UI
       router.push(`/?noteId=${uuid}&toastType=newNote`);
 
-      setLoading(false);
+      try {
+        await createNoteAction(uuid);
+      } catch (error) {
+        // If the creation fails, show an error and redirect back
+        toast.error("Failed to create note", {
+          description: "Please try again",
+        });
+        router.push("/");
+      } finally {
+        setLoading(false);
+      }
     }
   };
 

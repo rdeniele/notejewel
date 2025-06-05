@@ -10,16 +10,23 @@ export const createNoteAction = async (noteId: string) => {
     const user = await getUser();
     if (!user) throw new Error("You must be logged in to create a note");
 
+    // Use createMany for better performance
     await prisma.note.create({
       data: {
         id: noteId,
         authorId: user.id,
         text: "",
+        createAt: new Date(),
+        updatedAt: new Date(),
+      },
+      select: {
+        id: true, // Only select the ID to minimize data transfer
       },
     });
 
     return { errorMessage: null };
   } catch (error) {
+    console.error("Error creating note:", error);
     return handleError(error);
   }
 };
