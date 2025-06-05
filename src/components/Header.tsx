@@ -5,8 +5,7 @@ import { Button } from "@/components/ui/button"
 import { DarkModeToggle } from "./DarkModeToggle";
 import LogOutButton from "./LogOutButton";
 import { getUser } from "@/auth/server";
-import { Menu } from "lucide-react";
-import { useSidebar } from "@/components/ui/sidebar";
+import { MobileMenuButton } from "./MobileMenuButton";
 
 async function Header() {
     const user = await getUser();
@@ -69,22 +68,6 @@ async function Header() {
                 </div>
             </div>
         </header>
-    );
-}
-
-function MobileMenuButton() {
-    const { toggleSidebar } = useSidebar();
-
-    return (
-        <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden"
-            onClick={toggleSidebar}
-        >
-            <Menu className="size-5" />
-            <span className="sr-only">Toggle Menu</span>
-        </Button>
     );
 }
 
