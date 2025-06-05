@@ -13,7 +13,7 @@ import {
 import { Fragment, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Textarea } from "./ui/textarea";
-import { ArrowUpIcon } from "lucide-react";
+import { ArrowUpIcon, Sparkles } from "lucide-react";
 import { askAIAboutNotesAction } from "@/actions/notes";
 import "@/styles/ai-response.css";
 
@@ -23,9 +23,7 @@ type Props = {
 
 function AskAIButton({ user }: Props) {
   const router = useRouter();
-
   const [isPending, startTransition] = useTransition();
-
   const [open, setOpen] = useState(false);
   const [questionText, setQuestionText] = useState("");
   const [questions, setQuestions] = useState<string[]>([]);
@@ -50,7 +48,6 @@ function AskAIButton({ user }: Props) {
   const handleInput = () => {
     const textarea = textareaRef.current;
     if (!textarea) return;
-
     textarea.style.height = "auto";
     textarea.style.height = `${textarea.scrollHeight}px`;
   };
@@ -66,7 +63,6 @@ function AskAIButton({ user }: Props) {
     setQuestions(newQuestions);
     setQuestionText("");
 
-    // Reset textarea height after clearing text
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
     }
@@ -80,7 +76,6 @@ function AskAIButton({ user }: Props) {
         setTimeout(scrollToBottom, 100);
       } catch (error) {
         console.error("AI request failed:", error);
-        // Handle error - maybe show an error message to user
         setResponses((prev) => [...prev, "Sorry, there was an error processing your request."]);
       }
     });
@@ -103,38 +98,51 @@ function AskAIButton({ user }: Props) {
   return (
     <Dialog open={open} onOpenChange={handleOnOpenChange}>
       <DialogTrigger asChild>
-        <Button variant="secondary">Ask AI</Button>
+        <Button variant="outline" className="gap-2">
+          <Sparkles className="size-4" />
+          Ask AI
+        </Button>
       </DialogTrigger>
       <DialogContent
         className="custom-scrollbar flex h-[85vh] max-w-4xl flex-col overflow-y-auto"
         ref={contentRef}
       >
         <DialogHeader>
-          <DialogTitle>Ask AI About Your Notes</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <Sparkles className="size-5" />
+            AI Assistant
+          </DialogTitle>
           <DialogDescription>
-            Out AI can answer questions about all of your notes
+            Ask questions about your notes and get instant AI-powered insights
           </DialogDescription>
         </DialogHeader>
 
         <div className="mt-4 flex flex-col gap-8">
           {questions.map((question, index) => (
             <Fragment key={index}>
-              <p className="bg-muted text-muted-foreground ml-auto max-w-[60%] rounded-md px-2 py-1 text-sm">
-                {question}
-              </p>
-              {responses[index] && (
-                <p
-                  className="bot-response text-muted-foreground text-sm"
-                  dangerouslySetInnerHTML={{ __html: responses[index] }}
-                />
-              )}
+              <div className="flex flex-col gap-2">
+                <p className="bg-muted text-muted-foreground ml-auto max-w-[60%] rounded-lg px-4 py-2 text-sm">
+                  {question}
+                </p>
+                {responses[index] && (
+                  <div className="bot-response text-muted-foreground max-w-[80%] rounded-lg bg-primary/5 p-4 text-sm">
+                    <div dangerouslySetInnerHTML={{ __html: responses[index] }} />
+                  </div>
+                )}
+              </div>
             </Fragment>
           ))}
-          {isPending && <p className="animate-pulse text-sm">Thinking...</p>}
+          {isPending && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="size-2 animate-bounce rounded-full bg-primary" />
+              <div className="size-2 animate-bounce rounded-full bg-primary [animation-delay:0.2s]" />
+              <div className="size-2 animate-bounce rounded-full bg-primary [animation-delay:0.4s]" />
+            </div>
+          )}
         </div>
 
         <div
-          className="mt-auto flex cursor-text flex-col rounded-lg border p-4"
+          className="mt-auto flex cursor-text flex-col rounded-lg border bg-card p-4"
           onClick={handleClickInput}
         >
           <Textarea
@@ -151,8 +159,11 @@ function AskAIButton({ user }: Props) {
             value={questionText}
             onChange={(e) => setQuestionText(e.target.value)}
           />
-          <Button className="ml-auto size-8 rounded-full" onClick={handleSubmit}>
-            <ArrowUpIcon className="text-background" />
+          <Button 
+            className="ml-auto size-8 rounded-full bg-primary hover:bg-primary/90" 
+            onClick={handleSubmit}
+          >
+            <ArrowUpIcon className="size-4 text-primary-foreground" />
           </Button>
         </div>
       </DialogContent>

@@ -10,6 +10,7 @@ import { prisma } from "@/db/prisma";
 import { Note } from "@prisma/client";
 import Link from "next/link";
 import SideBarGroupContent from "./SideBarGroupContent";
+import { BookOpen } from "lucide-react";
 
 async function AppSidebar() {
   const user = await getUser();
@@ -29,16 +30,33 @@ async function AppSidebar() {
 
   return (
     <Sidebar>
-      <SidebarHeader />
+      <SidebarHeader className="border-b px-6 py-4">
+        <div className="flex items-center gap-2">
+          <BookOpen className="size-5 text-primary" />
+          <h2 className="text-lg font-semibold">NoteJewel</h2>
+        </div>
+      </SidebarHeader>
       <SidebarContent className="custom-scrollbar">
         <SidebarGroup>
-          <SidebarGroupLabel className="mb-2 mt-2 text-lg">
-            {user?"Your Notes":
-              (
-              <p>
-                <Link href="/login">Login</Link> to see your notes
-              </p>)
-              }
+          <SidebarGroupLabel className="px-6 py-4 text-sm font-medium text-muted-foreground">
+            {user ? (
+              <div className="flex flex-col gap-1">
+                <span>Welcome back!</span>
+                <span className="text-xs text-muted-foreground/70">
+                  {notes.length} {notes.length === 1 ? 'note' : 'notes'} in your collection
+                </span>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                <p>Sign in to access your notes</p>
+                <Link 
+                  href="/login" 
+                  className="text-primary hover:underline"
+                >
+                  Login →
+                </Link>
+              </div>
+            )}
           </SidebarGroupLabel>
           {user && <SideBarGroupContent notes={notes}/>}
         </SidebarGroup>

@@ -1,49 +1,58 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { shadow } from "@/styles/utils";
 import { Button } from "@/components/ui/button"
 import { DarkModeToggle } from "./DarkModeToggle";
 import LogOutButton from "./LogOutButton";
 import { getUser } from "@/auth/server";
+import { BookOpen } from "lucide-react";
 
-async function Header(){
+async function Header() {
     const user = await getUser();
+    
     return (
-    <header className="relative flex h-24 w-full items-center justify-between bg-popover px-3 sm:px-8" 
-    style={{
-        boxShadow: shadow,
-    }}>
-        <Link href="/" className="flex items-end gap-2">
+        <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+            <div className="container flex h-16 items-center justify-between">
+                <Link 
+                    href="/" 
+                    className="flex items-center gap-2 transition-colors hover:text-primary"
+                >
+                    <div className="flex items-center gap-2">
+                        <BookOpen className="size-6 text-primary" />
+                        <div className="flex flex-col">
+                            <h1 className="text-xl font-semibold leading-none">NoteJewel</h1>
+                            <span className="text-xs text-muted-foreground">Your Digital Notebook</span>
+                        </div>
+                    </div>
+                </Link>
 
-            <Image src="/notesjewel.png" height={60} width={60} alt="logo" className="rounded-full" priority />
-            
-            <h1 className="flex flex-col pb-1 text-2xl font-semibold leading-6">note <span>Jewel</span></h1>
-        
-        </Link>
-
-        <div className="flex gap-4">
-            {user ? (
-                <LogOutButton/>
-            ):
-                (
-                    <>
-                        <Button asChild>
-                            <Link href="/sign-up" className="hidden sm:block">
-                                Sign Up
-                            </Link>
-                        </Button>
-                        <Button asChild variant="outline">
-                            <Link href="/login">
-                                Login
-                            </Link>
-                        </Button>
-                    </>
-                )
-            }
-            <DarkModeToggle/>
-        </div>
-    </header>
+                <div className="flex items-center gap-4">
+                    {user ? (
+                        <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <div className="size-2 rounded-full bg-primary" />
+                                <span>Signed in as {user.email}</span>
+                            </div>
+                            <LogOutButton />
+                        </div>
+                    ) : (
+                        <div className="flex items-center gap-2">
+                            <Button asChild variant="ghost">
+                                <Link href="/sign-up">
+                                    Sign Up
+                                </Link>
+                            </Button>
+                            <Button asChild>
+                                <Link href="/login">
+                                    Login
+                                </Link>
+                            </Button>
+                        </div>
+                    )}
+                    <DarkModeToggle />
+                </div>
+            </div>
+        </header>
     );
 }
 
