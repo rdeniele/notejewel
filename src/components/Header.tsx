@@ -6,7 +6,9 @@ import { DarkModeToggle } from "./DarkModeToggle";
 import LogOutButton from "./LogOutButton";
 import { getUser } from "@/auth/server";
 import { MobileMenuButton } from "./MobileMenuButton";
+import { MobileHeaderMenu } from "./MobileHeaderMenu";
 
+// Server Component for the main header
 async function Header() {
     const user = await getUser();
     
@@ -37,27 +39,23 @@ async function Header() {
                     </Link>
                 </div>
 
-                <div className="flex items-center gap-2 md:gap-4">
+                <div className="hidden md:flex items-center gap-4">
                     {user ? (
-                        <div className="flex items-center gap-2 md:gap-4">
-                            <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                 <div className="size-2 rounded-full bg-primary" />
                                 <span>Signed in as {user.email}</span>
-                            </div>
-                            <div className="sm:hidden flex items-center gap-2 text-sm text-muted-foreground">
-                                <div className="size-2 rounded-full bg-primary" />
-                                <span className="max-w-[100px] truncate">{user.email}</span>
                             </div>
                             <LogOutButton />
                         </div>
                     ) : (
-                        <div className="flex items-center gap-1 md:gap-2">
-                            <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
+                        <div className="flex items-center gap-2">
+                            <Button asChild variant="ghost">
                                 <Link href="/sign-up">
                                     Sign Up
                                 </Link>
                             </Button>
-                            <Button asChild size="sm">
+                            <Button asChild>
                                 <Link href="/login">
                                     Login
                                 </Link>
@@ -65,6 +63,10 @@ async function Header() {
                         </div>
                     )}
                     <DarkModeToggle />
+                </div>
+
+                <div className="md:hidden">
+                    <MobileHeaderMenu user={user} />
                 </div>
             </div>
         </header>
