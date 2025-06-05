@@ -119,13 +119,13 @@ export const askAIAboutNotesAction = async (
     const response = await result.response;
     let responseText = response.text() || "A problem has occurred";
     
-    // Clean up unwanted prefixes/suffixes
+    // Clean up unwanted prefixes/suffixes (ES2015 compatible)
     responseText = responseText
-      .replace(/^```html\s*/i, '') // Remove ```html at start
-      .replace(/\s*```$/i, '')     // Remove ``` at end
-      .replace(/^html\s*/i, '')    // Remove "html" at start
-      .replace(/^\s*<html>.*?<body[^>]*>/is, '') // Remove html/body opening tags
-      .replace(/<\/body>.*?<\/html>\s*$/is, '')  // Remove body/html closing tags
+      .replace(/^```html\s*/i, '') 
+      .replace(/\s*```$/i, '')     
+      .replace(/^html\s*/i, '')    
+      .replace(/^\s*<html>[\s\S]*?<body[^>]*>/i, '') 
+      .replace(/<\/body>[\s\S]*?<\/html>\s*$/i, '')  
       .trim();
     
     return responseText;
