@@ -20,6 +20,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script 
+          async 
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4143521375584293"
+          crossOrigin="anonymous"
+        />
+      </head>
       <body>
         <ThemeProvider
             attribute="class"
@@ -41,12 +48,6 @@ export default function RootLayout({
             <Toaster/>
             </NoteProvider>
           </ThemeProvider>
-          <Script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4143521375584293"
-          crossOrigin="anonymous"
-          strategy="afterInteractive"
-        />
       </body>
     </html>
   );
