@@ -6,6 +6,7 @@ import Header from "@/components/Header";
 import { SidebarProvider } from "@/components/ui/sidebar"
 import AppSidebar from "@/components/AppSidebar";
 import NoteProvider from "@/providers/NoteProvider";
+import Script from 'next/script'
 
 
 export const metadata: Metadata = {
@@ -40,7 +41,12 @@ export default function RootLayout({
             <Toaster/>
             </NoteProvider>
           </ThemeProvider>
-          
+          <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4143521375584293"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );
