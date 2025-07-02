@@ -10,6 +10,7 @@ import NotesCardGrid from "./NotesCardGrid";
 import NewNoteButton from "./NewNoteButton";
 import NewNoteModal from "./NewNoteModal";
 import { toast } from "sonner";
+import type { AuthUser } from "@/app/page";
 
 interface Note {
   id: string;
@@ -31,7 +32,7 @@ interface NotesPageProps {
   notes: Note[];
   selectedNoteId?: string;
   selectedNoteText?: string;
-  user: any;
+  user: AuthUser | null;
   subjects: Subject[];
 }
 

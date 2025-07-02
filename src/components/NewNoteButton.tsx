@@ -1,11 +1,11 @@
 "use client";
 
-import { User } from "@supabase/supabase-js";
+import type { AuthUser } from "@/app/page";
 import { Button } from "./ui/button";
 import { PlusCircle } from "lucide-react";
 
 type Props = {
-  user: User | null;
+  user: AuthUser | null;
   onClick: () => void;
 };
 

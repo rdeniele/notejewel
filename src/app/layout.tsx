@@ -11,6 +11,26 @@ export const metadata: Metadata = {
   title: "NoteJewel",
 };
 
+function Footer() {
+  return (
+    <footer className="w-full border-t bg-background/95 py-4 flex flex-col items-center justify-center mt-auto">
+      {/* Google AdSense Responsive Ad Unit */}
+      <div className="w-full flex justify-center">
+        <ins className="adsbygoogle"
+          style={{ display: 'block', width: '100%', minHeight: 90 }}
+          data-ad-client="ca-pub-4143521375584293"
+          data-ad-slot="YOUR_SLOT_ID"
+          data-ad-format="auto"
+          data-full-width-responsive="true"
+        ></ins>
+      </div>
+      <Script id="adsbygoogle-footer" strategy="afterInteractive">
+        {`(adsbygoogle = window.adsbygoogle || []).push({});`}
+      </Script>
+    </footer>
+  );
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -39,6 +59,7 @@ export default function RootLayout({
               <main className="flex flex-1 flex-col px-3 sm:px-4 pt-4 sm:pt-6 xl:px-8">
                 {children}
               </main>
+              <Footer />
             </div>
             <Toaster/>
           </NoteProvider>

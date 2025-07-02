@@ -9,7 +9,7 @@ import { updateUserStreak } from "@/actions/users";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Type for the auth user
-type AuthUser = {
+export type AuthUser = {
   id: string;
   email?: string;
 };
@@ -292,6 +292,7 @@ async function HomePage({searchParams}:Props){
         </TabsList>
 
         <TabsContent value="notes" className="mt-6">
+          {/* user is of type AuthUser, matching NotesPageProps */}
           <NotesPage 
             notes={allNotes}
             selectedNoteId=""

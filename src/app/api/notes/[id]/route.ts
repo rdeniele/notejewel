@@ -4,11 +4,11 @@ import { prisma } from '@/db/prisma';
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { text, title } = await request.json();
-    const noteId = params.id;
+    const { id: noteId } = await params;
 
     // Update the note using raw SQL since Prisma client doesn't recognize title field
     if (title !== undefined) {
@@ -49,10 +49,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const noteId = params.id;
+    const { id: noteId } = await params;
 
     await prisma.note.delete({
       where: { id: noteId }

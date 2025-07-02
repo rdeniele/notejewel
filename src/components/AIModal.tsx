@@ -91,7 +91,7 @@ export default function AIModal({
         timestamp: new Date()
       }]);
     }
-  }, [aiResult, action]);
+  }, [aiResult, action, chatMessages.length]);
 
   function parseQuiz(text: string) {
     // More robust parser that handles different formats
