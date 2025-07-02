@@ -7,7 +7,7 @@ import StudyDashboard from "@/components/StudyDashboard";
 import PricingPlans from "@/components/PricingPlans";
 import { prisma } from "@/db/prisma";
 import { updateUserStreak } from "@/actions/users";
-// import { getUserBillingInfo } from "@/actions/billing";
+import { getUserBillingInfo } from "@/actions/billing";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Type for the auth user
@@ -274,16 +274,22 @@ async function HomePage({searchParams}:Props){
     }))
   ) || [];
 
-  // Get billing information - temporarily disabled until Prisma client is regenerated
-  const billingInfo = {
-    planType: "FREE" as const,
-    billingStatus: "PENDING" as const,
-    dailyGenerationsUsed: 0,
-    remaining: 10,
-    limit: 10,
-    planEndDate: null,
-    billingEmail: null,
-  };
+  // Get billing information
+  let billingInfo;
+  try {
+    billingInfo = await getUserBillingInfo(userData.id);
+  } catch (error) {
+    console.error("Error fetching billing info:", error);
+    billingInfo = {
+      planType: "FREE" as const,
+      billingStatus: "PENDING" as const,
+      dailyGenerationsUsed: 0,
+      remaining: 10,
+      limit: 10,
+      planEndDate: null,
+      billingEmail: null,
+    };
+  }
 
   return (
     <div className="flex h-full flex-col gap-4 sm:gap-6 p-3 sm:p-6">

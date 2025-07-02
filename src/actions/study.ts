@@ -13,6 +13,14 @@ export async function generateStudyPlan(
   }
 ) {
   try {
+    // Check usage limit first - using temporary billing functions
+    const { checkUserUsageLimit, incrementUsage } = await import("@/actions/billing");
+    const usageCheck = await checkUserUsageLimit(userId);
+    
+    if (!usageCheck.canGenerate) {
+      throw new Error(`Daily limit reached. You have ${usageCheck.remaining} generations remaining.`);
+    }
+
     const subject = await prisma.subject.findUnique({
       where: { id: subjectId },
       include: {
@@ -92,6 +100,9 @@ Focus on creating a realistic, achievable plan that builds knowledge progressive
       },
     });
 
+    // Increment usage count - using temporary billing functions
+    await incrementUsage(userId);
+
     revalidatePath("/");
     return studyPlan;
   } catch (error) {
@@ -106,6 +117,14 @@ export async function generateQuiz(
   noteIds?: string[]
 ) {
   try {
+    // Check usage limit first - using temporary billing functions
+    const { checkUserUsageLimit, incrementUsage } = await import("@/actions/billing");
+    const usageCheck = await checkUserUsageLimit(userId);
+    
+    if (!usageCheck.canGenerate) {
+      throw new Error(`Daily limit reached. You have ${usageCheck.remaining} generations remaining.`);
+    }
+
     let notesContent = "";
     
     if (noteIds && noteIds.length > 0) {
@@ -177,6 +196,9 @@ Make the questions challenging but fair, covering different aspects of the mater
       },
     });
 
+    // Increment usage count - using temporary billing functions
+    await incrementUsage(userId);
+
     return quiz;
   } catch (error) {
     console.error("Error generating quiz:", error);
@@ -190,6 +212,14 @@ export async function generateConceptMap(
   noteIds?: string[]
 ) {
   try {
+    // Check usage limit first - using temporary billing functions
+    const { checkUserUsageLimit, incrementUsage } = await import("@/actions/billing");
+    const usageCheck = await checkUserUsageLimit(userId);
+    
+    if (!usageCheck.canGenerate) {
+      throw new Error(`Daily limit reached. You have ${usageCheck.remaining} generations remaining.`);
+    }
+
     let notesContent = "";
     
     if (noteIds && noteIds.length > 0) {
@@ -247,6 +277,9 @@ Make it clear and easy to understand the relationships between concepts.`;
         actionType: "AI_CONCEPT_MAP",
       },
     });
+
+    // Increment usage count - using temporary billing functions
+    await incrementUsage(userId);
 
     return text;
   } catch (error) {

@@ -1,51 +1,49 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-generator client {
-  provider = "prisma-client-js"
-}
-
 model User {
-  id                    String           @id @default(uuid())
-  email                 String           @unique
-  displayName           String?
-  studyStyle            StudyStyle       @default(READING)
-  dailyStudyTime        Int              @default(60) // minutes
-  streakCount           Int              @default(0)
-  lastActive            DateTime         @default(now())
-  // Billing fields
-  billingEmail          String?
-  billingStatus         BillingStatus    @default(PENDING)
-  dailyGenerationsUsed  Int              @default(0)
-  lastGenerationReset   DateTime         @default(now())
-  planEndDate           DateTime?
-  planStartDate         DateTime?
-  planType              PlanType         @default(FREE)
-  // Relations
-  notes                 Note[]
-  subjects              Subject[]
-  studyLogs             StudyLog[]
-  studyPlans            StudyPlan[]
-  billingRequests       BillingRequest[]
-  usageLogs             UsageLog[]
-  createAt              DateTime         @default(now())
-  updatedAt             DateTime         @updatedAt @default(now())
+  id                   String           @id @default(uuid())
+  email                String           @unique
+  displayName          String?
+  studyStyle           StudyStyle       @default(READING)
+  dailyStudyTime       Int              @default(60)
+  streakCount          Int              @default(0)
+  lastActive           DateTime         @default(now())
+  billingEmail         String?
+  billingStatus        BillingStatus    @default(PENDING)
+  dailyGenerationsUsed Int              @default(0)
+  lastGenerationReset  DateTime         @default(now())
+  planEndDate          DateTime?
+  planStartDate        DateTime?
+  planType             PlanType         @default(FREE)
+  createAt             DateTime         @default(now())
+  updatedAt            DateTime         @default(now()) @updatedAt
+  billingRequests      BillingRequest[]
+  notes                Note[]
+  studyLogs            StudyLog[]
+  studyPlans           StudyPlan[]
+  subjects             Subject[]
+  usageLogs            UsageLog[]
 }
 
 model Subject {
-  id             String   @id @default(uuid())
-  userId         String
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name           String
-  examDate       DateTime?
-  quizFrequency  Int      @default(7) // days between quizzes
-  notes          Note[]
-  studyLogs      StudyLog[]
-  studyPlans     StudyPlan[]
-  createAt       DateTime @default(now())
-  updatedAt      DateTime @updatedAt @default(now())
+  id            String      @id @default(uuid())
+  userId        String
+  name          String
+  examDate      DateTime?
+  quizFrequency Int         @default(7)
+  createAt      DateTime    @default(now())
+  updatedAt     DateTime    @default(now()) @updatedAt
+  notes         Note[]
+  studyLogs     StudyLog[]
+  studyPlans    StudyPlan[]
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Note {
@@ -53,57 +51,57 @@ model Note {
   title      String     @default("Untitled Note")
   text       String
   sourceType SourceType @default(MANUAL)
-  pdfUrl     String? // Public URL to PDF in Supabase Storage
-  author     User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  pdfUrl     String?
   authorId   String
-  subject    Subject?   @relation(fields: [subjectId], references: [id], onDelete: SetNull)
   subjectId  String?
-  studyLogs  StudyLog[]
   createAt   DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt @default(now())
+  updatedAt  DateTime   @default(now()) @updatedAt
+  author     User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  subject    Subject?   @relation(fields: [subjectId], references: [id])
+  studyLogs  StudyLog[]
 }
 
 model StudyLog {
-  id         String      @id @default(uuid())
+  id         String     @id @default(uuid())
   userId     String
-  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   subjectId  String?
-  subject    Subject?    @relation(fields: [subjectId], references: [id], onDelete: SetNull)
   noteId     String?
-  note       Note?       @relation(fields: [noteId], references: [id], onDelete: SetNull)
   actionType ActionType
-  timestamp  DateTime    @default(now())
+  timestamp  DateTime   @default(now())
+  note       Note?      @relation(fields: [noteId], references: [id])
+  subject    Subject?   @relation(fields: [subjectId], references: [id])
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model StudyPlan {
-  id         String   @id @default(uuid())
-  userId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  subjectId  String?
-  subject    Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
-  planData   Json     // Store the study plan as JSON
-  createAt   DateTime @default(now())
-  updatedAt  DateTime @updatedAt @default(now())
+  id        String   @id @default(uuid())
+  userId    String
+  subjectId String?
+  planData  Json
+  createAt  DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+  subject   Subject? @relation(fields: [subjectId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model BillingRequest {
-  id         String                @id @default(uuid())
+  id         String               @id @default(uuid())
   userId     String
-  user       User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
   planType   PlanType
   email      String
-  status     BillingRequestStatus  @default(PENDING)
+  status     BillingRequestStatus @default(PENDING)
   adminNotes String?
-  createAt   DateTime              @default(now())
-  updatedAt  DateTime              @updatedAt @default(now())
+  createAt   DateTime             @default(now())
+  updatedAt  DateTime             @default(now()) @updatedAt
+  user       User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model UsageLog {
   id         String   @id @default(uuid())
   userId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   actionType String
   timestamp  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Motivation {
