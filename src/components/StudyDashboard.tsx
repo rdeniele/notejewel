@@ -62,9 +62,15 @@ interface StudyDashboardProps {
       name: string;
     };
   }>;
+  billingInfo?: {
+    planType: "FREE" | "BASIC" | "PREMIUM";
+    dailyGenerationsUsed: number;
+    remaining: number;
+    limit: number;
+  };
 }
 
-export default function StudyDashboard({ user, subjects, studyLogs }: StudyDashboardProps) {
+export default function StudyDashboard({ user, subjects, studyLogs, billingInfo }: StudyDashboardProps) {
   const [activeTab, setActiveTab] = useState("overview");
   const [motivationalQuote, setMotivationalQuote] = useState("");
   const [selectedSubjectForQuiz, setSelectedSubjectForQuiz] = useState<{
@@ -424,6 +430,28 @@ export default function StudyDashboard({ user, subjects, studyLogs }: StudyDashb
                 </p>
               </CardContent>
             </Card>
+
+            {billingInfo && (
+              <Card className={billingInfo.remaining <= 2 ? "border-yellow-500 bg-yellow-50" : ""}>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">AI Generations</CardTitle>
+                  <Sparkles className="size-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {billingInfo.remaining === Infinity ? "∞" : billingInfo.remaining}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {billingInfo.planType} plan • {billingInfo.dailyGenerationsUsed} used today
+                  </p>
+                  {billingInfo.remaining <= 2 && billingInfo.planType !== "PREMIUM" && (
+                    <p className="text-xs text-yellow-600 mt-1">
+                      Consider upgrading for unlimited access
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* Upcoming Exams */}

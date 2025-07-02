@@ -8,19 +8,30 @@ generator client {
 }
 
 model User {
-  id              String     @id @default(uuid())
-  email           String     @unique
-  displayName     String?
-  studyStyle      StudyStyle @default(READING)
-  dailyStudyTime  Int        @default(60) // minutes
-  streakCount     Int        @default(0)
-  lastActive      DateTime   @default(now())
-  notes           Note[]
-  subjects        Subject[]
-  studyLogs       StudyLog[]
-  studyPlans      StudyPlan[]
-  createAt        DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt @default(now())
+  id                    String           @id @default(uuid())
+  email                 String           @unique
+  displayName           String?
+  studyStyle            StudyStyle       @default(READING)
+  dailyStudyTime        Int              @default(60) // minutes
+  streakCount           Int              @default(0)
+  lastActive            DateTime         @default(now())
+  // Billing fields
+  billingEmail          String?
+  billingStatus         BillingStatus    @default(PENDING)
+  dailyGenerationsUsed  Int              @default(0)
+  lastGenerationReset   DateTime         @default(now())
+  planEndDate           DateTime?
+  planStartDate         DateTime?
+  planType              PlanType         @default(FREE)
+  // Relations
+  notes                 Note[]
+  subjects              Subject[]
+  studyLogs             StudyLog[]
+  studyPlans            StudyPlan[]
+  billingRequests       BillingRequest[]
+  usageLogs             UsageLog[]
+  createAt              DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt @default(now())
 }
 
 model Subject {
@@ -38,18 +49,18 @@ model Subject {
 }
 
 model Note {
-  id         String   @id @default(uuid())
-  title      String   @default("Untitled Note")
+  id         String     @id @default(uuid())
+  title      String     @default("Untitled Note")
   text       String
   sourceType SourceType @default(MANUAL)
   pdfUrl     String? // Public URL to PDF in Supabase Storage
-  author     User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  author     User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
   authorId   String
-  subject    Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  subject    Subject?   @relation(fields: [subjectId], references: [id], onDelete: SetNull)
   subjectId  String?
   studyLogs  StudyLog[]
-  createAt   DateTime @default(now())
-  updatedAt  DateTime @updatedAt @default(now())
+  createAt   DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt @default(now())
 }
 
 model StudyLog {
@@ -73,6 +84,26 @@ model StudyPlan {
   planData   Json     // Store the study plan as JSON
   createAt   DateTime @default(now())
   updatedAt  DateTime @updatedAt @default(now())
+}
+
+model BillingRequest {
+  id         String                @id @default(uuid())
+  userId     String
+  user       User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planType   PlanType
+  email      String
+  status     BillingRequestStatus  @default(PENDING)
+  adminNotes String?
+  createAt   DateTime              @default(now())
+  updatedAt  DateTime              @updatedAt @default(now())
+}
+
+model UsageLog {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  actionType String
+  timestamp  DateTime @default(now())
 }
 
 model Motivation {
@@ -105,4 +136,24 @@ enum ActionType {
   AI_SUMMARY
   AI_QUIZ
   AI_CONCEPT_MAP
+}
+
+enum PlanType {
+  FREE
+  BASIC
+  PREMIUM
+}
+
+enum BillingStatus {
+  PENDING
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+enum BillingRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  COMPLETED
 }

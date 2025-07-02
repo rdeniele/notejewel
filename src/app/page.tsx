@@ -4,8 +4,10 @@ import NoteTextInput from "@/components/NoteTextInput";
 import NotesPage from "@/components/NotesPage";
 import UserProfileSetupWrapper from "@/components/UserProfileSetupWrapper";
 import StudyDashboard from "@/components/StudyDashboard";
+import PricingPlans from "@/components/PricingPlans";
 import { prisma } from "@/db/prisma";
 import { updateUserStreak } from "@/actions/users";
+// import { getUserBillingInfo } from "@/actions/billing";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Type for the auth user
@@ -272,6 +274,17 @@ async function HomePage({searchParams}:Props){
     }))
   ) || [];
 
+  // Get billing information - temporarily disabled until Prisma client is regenerated
+  const billingInfo = {
+    planType: "FREE" as const,
+    billingStatus: "PENDING" as const,
+    dailyGenerationsUsed: 0,
+    remaining: 10,
+    limit: 10,
+    planEndDate: null,
+    billingEmail: null,
+  };
+
   return (
     <div className="flex h-full flex-col gap-4 sm:gap-6 p-3 sm:p-6">
       <Tabs defaultValue="study" className="w-full">
@@ -286,9 +299,10 @@ async function HomePage({searchParams}:Props){
           </div>
         </div>
 
-        <TabsList className="grid w-full max-w-7xl mx-auto grid-cols-2 mt-6">
+        <TabsList className="grid w-full max-w-7xl mx-auto grid-cols-3 mt-6">
           <TabsTrigger value="study">Study Dashboard</TabsTrigger>
           <TabsTrigger value="notes">Notes</TabsTrigger>
+          <TabsTrigger value="pricing">Pricing</TabsTrigger>
         </TabsList>
 
         <TabsContent value="notes" className="mt-6">
@@ -337,6 +351,18 @@ async function HomePage({searchParams}:Props){
                 timestamp: log.timestamp,
                 subject: log.subject || undefined,
               })) || []}
+              billingInfo={billingInfo}
+            />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="pricing" className="mt-6">
+          <div className="w-full max-w-7xl mx-auto">
+            <PricingPlans
+              userId={userData.id}
+              currentPlan={billingInfo.planType}
+              currentUsage={billingInfo.dailyGenerationsUsed}
+              currentLimit={billingInfo.limit}
             />
           </div>
         </TabsContent>
