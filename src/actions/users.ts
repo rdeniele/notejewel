@@ -50,14 +50,24 @@ export const signUpAction = async (email:string, password:string) => {
 
         if(!userId) throw new Error("Error signing up");
 
-        // add user to database
-        await prisma.user.create({
-            data: {
-                id: userId,
-                email: email,
-                
-            }
-        })
+        // Check if user already exists in database
+        const existingUser = await prisma.user.findUnique({
+            where: { id: userId },
+        });
+
+        if (!existingUser) {
+            // add user to database only if they don't exist
+            await prisma.user.create({
+                data: {
+                    id: userId,
+                    email: email,
+                    studyStyle: "READING",
+                    dailyStudyTime: 60,
+                    streakCount: 0,
+                    lastActive: new Date(),
+                }
+            });
+        }
 
         return { errorMessage: null };
     } catch (error) {
@@ -161,7 +171,8 @@ export async function updateUserStreak(userId: string) {
     });
 
     if (!user) {
-      throw new Error("User not found");
+      console.error("User not found for streak update:", userId);
+      return null; // Don't throw error, just return null
     }
 
     const today = new Date();
@@ -170,7 +181,7 @@ export async function updateUserStreak(userId: string) {
       (today.getTime() - lastActive.getTime()) / (1000 * 60 * 60 * 24)
     );
 
-    let newStreakCount = user.streakCount;
+    let newStreakCount = user.streakCount || 0;
 
     // If more than 7 days have passed, reset streak to 0
     if (daysSinceLastActive >= 7) {
@@ -183,7 +194,7 @@ export async function updateUserStreak(userId: string) {
       newStreakCount = 1;
     } else if (daysSinceLastActive === 0) {
       // Same day, don't increment
-      newStreakCount = user.streakCount;
+      newStreakCount = user.streakCount || 0;
     }
 
     const updatedUser = await prisma.user.update({
@@ -196,6 +207,8 @@ export async function updateUserStreak(userId: string) {
 
     return updatedUser;
   } catch (error) {
-    throw new Error("Failed to update user streak");
+    console.error("Error updating user streak:", error);
+    // Don't throw error to avoid breaking the app
+    return null;
   }
 }

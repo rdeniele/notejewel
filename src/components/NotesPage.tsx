@@ -125,7 +125,7 @@ export default function NotesPage({
               {notes.length} note{notes.length !== 1 ? 's' : ''} • Click "New Note" to create
             </p>
           </div>
-          <NewNoteButton user={user} onClick={handleNewNoteClick} />
+                      <NewNoteButton user={user} onClick={handleNewNoteClick} />
         </div>
         
         <NotesCardGrid 

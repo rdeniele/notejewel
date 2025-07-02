@@ -90,8 +90,16 @@ export default function StudyDashboard({ user, subjects, studyLogs, billingInfo 
   const [currentStudyLogs, setCurrentStudyLogs] = useState(studyLogs);
 
   useEffect(() => {
-    // Update user streak on component mount
-    updateUserStreak(user.id);
+    // Update user streak on component mount (handle errors gracefully)
+    const updateStreak = async () => {
+      try {
+        await updateUserStreak(user.id);
+      } catch (error) {
+        console.error("Error updating user streak:", error);
+        // Continue without breaking the app
+      }
+    };
+    updateStreak();
     
     // Set motivational quote
     const quotes = [
