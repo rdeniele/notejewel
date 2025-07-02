@@ -12,8 +12,10 @@ export async function GET(request: NextRequest) {
     const storageBucket = buckets?.find(b => b.name === 'storage');
     
     // 3. Try to list files in storage bucket (if it exists)
-    let filesInStorage = null;
-    let filesError = null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let filesInStorage: any = null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let filesError: any = null;
     if (storageBucket) {
       const { data: files, error } = await supabase.storage.from('storage').list();
       filesInStorage = files;
