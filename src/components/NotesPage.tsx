@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Clock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import NotesCardGrid from "./NotesCardGrid";
@@ -124,7 +125,7 @@ export default function NotesPage({
               {notes.length} note{notes.length !== 1 ? 's' : ''} • Click "New Note" to create
             </p>
           </div>
-                      <NewNoteButton user={user} onClick={handleNewNoteClick} />
+          <NewNoteButton user={user} onClick={handleNewNoteClick} />
         </div>
         
         <NotesCardGrid 
@@ -176,6 +177,8 @@ export default function NotesPage({
           </div>
         </DialogContent>
       </Dialog>
+
+
     </div>
   );
 } 

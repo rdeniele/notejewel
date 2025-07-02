@@ -34,7 +34,7 @@ export const createNoteAction = async (noteId: string) => {
 export const createNoteWithContent = async (data: {
   title: string;
   text: string;
-  authorId: string;
+  authorId?: string; // Made optional since we get it from authenticated user
   subjectId: string;
   sourceType: "MANUAL" | "PDF";
   pdfUrl?: string;
@@ -43,14 +43,20 @@ export const createNoteWithContent = async (data: {
     const user = await getUser();
     if (!user) throw new Error("You must be logged in to create a note");
 
-    // Use raw SQL to create the note since Prisma client doesn't recognize title field
-    const noteId = crypto.randomUUID();
-    await prisma.$executeRaw`
-      INSERT INTO "Note" ("id", "title", "text", "authorId", "subjectId", "sourceType", "pdfUrl", "createAt", "updatedAt")
-      VALUES (${noteId}, ${data.title}, ${data.text}, ${data.authorId}, ${data.subjectId}, ${data.sourceType}, ${data.pdfUrl}, NOW(), NOW())
-    `;
-    
-    const note = { id: noteId, title: data.title, text: data.text };
+    // Use Prisma client with proper authentication context
+    const note = await prisma.note.create({
+      data: {
+        id: crypto.randomUUID(),
+        title: data.title,
+        text: data.text,
+        authorId: user.id,
+        subjectId: data.subjectId,
+        sourceType: data.sourceType,
+        pdfUrl: data.pdfUrl,
+        createAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
 
     return { note, errorMessage: null };
   } catch (error) {

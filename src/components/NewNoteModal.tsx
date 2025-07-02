@@ -11,8 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { createNoteWithContent } from "@/actions/notes";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Upload, FileText, Plus, X } from "lucide-react";
-import { supabase } from '@/lib/supabaseClient';
+import { Plus } from "lucide-react";
 
 interface Subject {
   id: string;
@@ -37,31 +36,8 @@ export default function NewNoteModal({
   const [selectedSubject, setSelectedSubject] = useState<string>("");
   const [noteContent, setNoteContent] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [fileName, setFileName] = useState("");
   const [title, setTitle] = useState("");
   const router = useRouter();
-
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      if (file.type === "application/pdf") {
-        setUploadedFile(file);
-        setFileName(file.name);
-        // For now, we'll just show the filename
-        // In a real implementation, you'd process the PDF here
-        setNoteContent(`PDF uploaded: ${file.name}\n\n[PDF content would be extracted and displayed here]`);
-      } else {
-        toast.error("Please upload a PDF file");
-      }
-    }
-  };
-
-  const removeFile = () => {
-    setUploadedFile(null);
-    setFileName("");
-    setNoteContent("");
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,47 +52,20 @@ export default function NewNoteModal({
       return;
     }
 
-    if (!noteContent.trim() && !uploadedFile) {
-      toast.error("Please enter note content or upload a PDF");
+    if (!noteContent.trim()) {
+      toast.error("Please enter note content");
       return;
     }
 
     setIsLoading(true);
 
-    let pdfUrl: string | undefined = undefined;
-    let noteText = noteContent;
-
     try {
-      // If a PDF is uploaded, upload it to Supabase Storage
-      if (uploadedFile) {
-        try {
-          const fileExt = uploadedFile.name.split('.').pop();
-          const filePath = `notes/${userId}/${Date.now()}_${uploadedFile.name}`;
-          
-          const { data, error } = await supabase.storage.from('storage').upload(filePath, uploadedFile);
-          
-          if (error) {
-            throw new Error(`Upload failed: ${error.message}`);
-          }
-          
-          // Get public URL
-          const { data: publicUrlData } = supabase.storage.from('storage').getPublicUrl(filePath);
-          pdfUrl = publicUrlData.publicUrl;
-          noteText = 'Processing PDF...';
-        } catch (uploadError) {
-          toast.error(`PDF upload failed: ${uploadError instanceof Error ? uploadError.message : 'Unknown error'}`);
-          setIsLoading(false);
-          return;
-        }
-      }
-
       const result = await createNoteWithContent({
         title,
-        text: noteText,
+        text: noteContent,
         authorId: userId,
         subjectId: selectedSubject,
-        sourceType: uploadedFile ? "PDF" : "MANUAL",
-        pdfUrl,
+        sourceType: "MANUAL",
       });
       
       if (result.errorMessage) {
@@ -137,8 +86,6 @@ export default function NewNoteModal({
       setSelectedSubject("");
       setTitle("");
       setNoteContent("");
-      setUploadedFile(null);
-      setFileName("");
     } catch (error) {
       toast.error("Failed to create note");
     } finally {
@@ -222,72 +169,13 @@ export default function NewNoteModal({
             </div>
 
             <div className="space-y-4">
-              <Label className="text-base font-medium">Note Content</Label>
-              
-              {/* File Upload Section */}
-              <Card className="border-dashed border-2">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Upload className="size-5" />
-                    Upload PDF (Optional)
-                  </CardTitle>
-                  <CardDescription>
-                    Upload a PDF file to extract text and create a note
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {!uploadedFile ? (
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-center w-full">
-                        <Label
-                          htmlFor="pdf-upload"
-                          className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50"
-                        >
-                          <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                            <Upload className="w-8 h-8 mb-2 text-muted-foreground" />
-                            <p className="mb-2 text-sm text-muted-foreground">
-                              <span className="font-semibold">Click to upload</span> or drag and drop
-                            </p>
-                            <p className="text-xs text-muted-foreground">PDF files only</p>
-                          </div>
-                          <Input
-                            id="pdf-upload"
-                            type="file"
-                            accept=".pdf"
-                            className="hidden"
-                            onChange={handleFileUpload}
-                          />
-                        </Label>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                      <div className="flex items-center gap-2">
-                        <FileText className="size-4" />
-                        <span className="text-sm font-medium">{fileName}</span>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={removeFile}
-                        className="h-8 w-8 p-0"
-                      >
-                        <X className="size-4" />
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Text Input Section */}
               <div className="space-y-2">
                 <Label htmlFor="noteContent" className="text-base font-medium">
-                  Note Text *
+                  Note Content *
                 </Label>
                 <Textarea
                   id="noteContent"
-                  placeholder="Write your note here... or upload a PDF above"
+                  placeholder="Write your note here..."
                   value={noteContent}
                   onChange={(e) => setNoteContent(e.target.value)}
                   className="min-h-[200px] resize-none"
