@@ -119,6 +119,13 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* Custom breakpoint for extra small screens */
+  @media (min-width: 475px) {
+    .xs\:block {
+      display: block;
+    }
+  }
 
   .custom-scrollbar::-webkit-scrollbar {
     width: 8px;

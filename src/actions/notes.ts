@@ -31,18 +31,57 @@ export const createNoteAction = async (noteId: string) => {
   }
 };
 
-export const updateNoteAction = async (noteId: string, text: string) => {
+export const createNoteWithContent = async (data: {
+  title: string;
+  text: string;
+  authorId: string;
+  subjectId: string;
+  sourceType: "MANUAL" | "PDF";
+  pdfUrl?: string;
+}) => {
+  try {
+    const user = await getUser();
+    if (!user) throw new Error("You must be logged in to create a note");
+
+    // Use raw SQL to create the note since Prisma client doesn't recognize title field
+    const noteId = crypto.randomUUID();
+    await prisma.$executeRaw`
+      INSERT INTO "Note" ("id", "title", "text", "authorId", "subjectId", "sourceType", "pdfUrl", "createAt", "updatedAt")
+      VALUES (${noteId}, ${data.title}, ${data.text}, ${data.authorId}, ${data.subjectId}, ${data.sourceType}, ${data.pdfUrl}, NOW(), NOW())
+    `;
+    
+    const note = { id: noteId, title: data.title, text: data.text };
+
+    return { note, errorMessage: null };
+  } catch (error) {
+    console.error("Error creating note with content:", error);
+    return { note: null, errorMessage: handleError(error).errorMessage };
+  }
+};
+
+export const updateNoteAction = async (noteId: string, text: string, title?: string) => {
   try {
     const user = await getUser();
     if (!user) throw new Error("You must be logged in to update a note");
 
-    await prisma.note.update({
-      where: { id: noteId },
-      data: { text },
-    });
+    // Use raw SQL to update the note since Prisma client doesn't recognize title field
+    if (title !== undefined) {
+      await prisma.$executeRaw`
+        UPDATE "Note" 
+        SET "text" = ${text}, "title" = ${title}, "updatedAt" = NOW()
+        WHERE "id" = ${noteId} AND "authorId" = ${user.id}
+      `;
+    } else {
+      await prisma.$executeRaw`
+        UPDATE "Note" 
+        SET "text" = ${text}, "updatedAt" = NOW()
+        WHERE "id" = ${noteId} AND "authorId" = ${user.id}
+      `;
+    }
 
     return { errorMessage: null };
   } catch (error) {
+    console.error("Error updating note:", error);
     return handleError(error);
   }
 };

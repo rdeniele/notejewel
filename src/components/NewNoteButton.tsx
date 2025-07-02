@@ -2,57 +2,29 @@
 
 import { User } from "@supabase/supabase-js";
 import { Button } from "./ui/button";
-import { Loader2, PlusCircle } from "lucide-react";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { v4 as uuidv4 } from "uuid";
-import { createNoteAction } from "@/actions/notes";
-import { toast } from "sonner";
+import { PlusCircle } from "lucide-react";
 
 type Props = {
   user: User | null;
+  onClick: () => void;
 };
 
-function NewNoteButton({ user }: Props) {
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
-
-  const handleClickNewNoteButton = async () => {
+function NewNoteButton({ user, onClick }: Props) {
+  const handleClick = () => {
     if (!user) {
-      router.push("/login");
-    } else {
-      setLoading(true);
-      const uuid = uuidv4();
-
-      // Optimistically update the UI
-      router.push(`/?noteId=${uuid}&toastType=newNote`);
-
-      try {
-        await createNoteAction(uuid);
-      } catch (error) {
-        // If the creation fails, show an error and redirect back
-        toast.error("Failed to create note", {
-          description: "Please try again",
-        });
-        router.push("/");
-      } finally {
-        setLoading(false);
-      }
+      // Handle not logged in case
+      return;
     }
+    onClick();
   };
 
   return (
     <Button
-      onClick={handleClickNewNoteButton}
+      onClick={handleClick}
       variant="default"
       className="gap-2"
-      disabled={loading}
     >
-      {loading ? (
-        <Loader2 className="size-4 animate-spin" />
-      ) : (
-        <PlusCircle className="size-4" />
-      )}
+      <PlusCircle className="size-4" />
       New Note
     </Button>
   );

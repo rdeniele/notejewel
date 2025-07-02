@@ -7,19 +7,102 @@ generator client {
   provider = "prisma-client-js"
 }
 
-model Note {
-  id    String  @id @default(uuid())
-  text  String 
-  author    User    @relation(fields:[authorId],references:[id]) 
-  authorId  String
-  createAt DateTime @default(now())
-  updatedAt DateTime @updatedAt @default(now())
+model User {
+  id              String     @id @default(uuid())
+  email           String     @unique
+  displayName     String?
+  studyStyle      StudyStyle @default(READING)
+  dailyStudyTime  Int        @default(60) // minutes
+  streakCount     Int        @default(0)
+  lastActive      DateTime   @default(now())
+  notes           Note[]
+  subjects        Subject[]
+  studyLogs       StudyLog[]
+  studyPlans      StudyPlan[]
+  createAt        DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt @default(now())
 }
 
-model User {
-  id    String     @id @default(uuid())
-  email String  @unique
-  notes Note[]
-  createAt DateTime @default(now())
-  updatedAt DateTime @updatedAt @default(now())
+model Subject {
+  id             String   @id @default(uuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name           String
+  examDate       DateTime?
+  quizFrequency  Int      @default(7) // days between quizzes
+  notes          Note[]
+  studyLogs      StudyLog[]
+  studyPlans     StudyPlan[]
+  createAt       DateTime @default(now())
+  updatedAt      DateTime @updatedAt @default(now())
+}
+
+model Note {
+  id         String   @id @default(uuid())
+  title      String   @default("Untitled Note")
+  text       String
+  sourceType SourceType @default(MANUAL)
+  pdfUrl     String? // Public URL to PDF in Supabase Storage
+  author     User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId   String
+  subject    Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  subjectId  String?
+  studyLogs  StudyLog[]
+  createAt   DateTime @default(now())
+  updatedAt  DateTime @updatedAt @default(now())
+}
+
+model StudyLog {
+  id         String      @id @default(uuid())
+  userId     String
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subjectId  String?
+  subject    Subject?    @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  noteId     String?
+  note       Note?       @relation(fields: [noteId], references: [id], onDelete: SetNull)
+  actionType ActionType
+  timestamp  DateTime    @default(now())
+}
+
+model StudyPlan {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subjectId  String?
+  subject    Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  planData   Json     // Store the study plan as JSON
+  createAt   DateTime @default(now())
+  updatedAt  DateTime @updatedAt @default(now())
+}
+
+model Motivation {
+  id     String @id @default(uuid())
+  quote  String
+  author String
+}
+
+enum StudyStyle {
+  VISUAL
+  READING
+  PRACTICE
+  TEACHING
+  AUDIO
+}
+
+enum SourceType {
+  MANUAL
+  PDF
+  HANDWRITTEN
+}
+
+enum ActionType {
+  NOTE_CREATED
+  NOTE_UPDATED
+  QUIZ_TAKEN
+  STUDY_PLAN_CREATED
+  STUDY_PLAN_COMPLETED
+  SUBJECT_VIEWED
+  AI_SUMMARY
+  AI_QUIZ
+  AI_CONCEPT_MAP
 }
