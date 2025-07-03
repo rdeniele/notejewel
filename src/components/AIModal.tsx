@@ -167,7 +167,29 @@ export default function AIModal({
         medium: "medium difficulty with application questions",
         hard: "challenging difficulty with analysis and synthesis questions"
       };
-      const prompt = `Generate exactly ${questionCount} multiple-choice questions at ${difficultyText[difficulty]} based on the note content.\n\nIMPORTANT: Generate exactly ${questionCount} questions, no more, no less.\n\nFormat each question as:\n1. [Question text]?\nA) [Option A]\nB) [Option B]\nC) [Option C]\nD) [Option D]\nAnswer: [A, B, C, or D]\n\nMake sure each question has exactly 4 options (A, B, C, D) and a clear answer.`;
+      const prompt = `You are creating a quiz based SPECIFICALLY on the note content provided below. The questions must be directly derived from the information in these notes - do not use general knowledge outside of what's written in the notes.
+
+NOTE TITLE: "${noteTitle}"
+NOTE CONTENT: "${noteContent}"
+
+Generate exactly ${questionCount} multiple-choice questions at ${difficultyText[difficulty]} that test understanding of the SPECIFIC content in the notes above.
+
+REQUIREMENTS:
+- Questions must be based ONLY on information explicitly mentioned in the notes
+- Test key concepts, facts, definitions, or examples from the notes
+- Include specific details, names, dates, or terminology mentioned in the notes
+- For ${difficulty} difficulty: ${difficultyText[difficulty]}
+- Generate exactly ${questionCount} questions, no more, no less
+
+Format each question as:
+1. [Question text based on note content]?
+A) [Option A]
+B) [Option B] 
+C) [Option C]
+D) [Option D]
+Answer: [A, B, C, or D]
+
+Make sure each question has exactly 4 options (A, B, C, D) and tests something specific from the provided note content.`;
       const response = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -220,7 +242,30 @@ export default function AIModal({
         medium: "medium difficulty with application questions",
         hard: "challenging difficulty with analysis and synthesis questions"
       };
-      const prompt = `Generate exactly ${questionCount} new multiple-choice questions at ${difficultyText[difficulty]} based on the note content.\n\nIMPORTANT: Generate exactly ${questionCount} questions, no more, no less.\n\nFormat each question as:\n1. [Question text]?\nA) [Option A]\nB) [Option B]\nC) [Option C]\nD) [Option D]\nAnswer: [A, B, C, or D]\n\nMake sure each question has exactly 4 options (A, B, C, D) and a clear answer.`;
+      const prompt = `You are creating a NEW set of quiz questions based SPECIFICALLY on the note content provided below. These should be different from any previous questions but still test the same note content. The questions must be directly derived from the information in these notes - do not use general knowledge outside of what's written in the notes.
+
+NOTE TITLE: "${noteTitle}"
+NOTE CONTENT: "${noteContent}"
+
+Generate exactly ${questionCount} NEW multiple-choice questions at ${difficultyText[difficulty]} that test understanding of the SPECIFIC content in the notes above.
+
+REQUIREMENTS:
+- Questions must be based ONLY on information explicitly mentioned in the notes
+- Test different aspects, details, or perspectives from the same note content
+- Include specific details, names, dates, or terminology mentioned in the notes
+- Create questions that approach the content from different angles than previous questions
+- For ${difficulty} difficulty: ${difficultyText[difficulty]}
+- Generate exactly ${questionCount} questions, no more, no less
+
+Format each question as:
+1. [Question text based on note content]?
+A) [Option A]
+B) [Option B]
+C) [Option C] 
+D) [Option D]
+Answer: [A, B, C, or D]
+
+Make sure each question has exactly 4 options (A, B, C, D) and tests something specific from the provided note content.`;
       const response = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -488,14 +533,14 @@ export default function AIModal({
               const isCorrect = q.answer && userAnswer && userAnswer.includes(q.answer);
               
               return (
-                <div key={idx} className={`border rounded-lg p-4 ${isCorrect ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
-                  <div className="font-medium mb-2">Q{idx + 1}: {q.question}</div>
-                  <div className="space-y-1 text-sm">
+                <div key={idx} className={`border rounded-lg p-4 ${isCorrect ? 'bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800'}`}>
+                  <div className="font-medium mb-2 text-foreground">Q{idx + 1}: {q.question}</div>
+                  <div className="space-y-1 text-sm text-foreground">
                     <div>Your answer: <span className="font-mono">{userAnswer || 'No answer'}</span></div>
                     {q.answer && (
                       <div>Correct answer: <span className="font-mono">{q.answer}</span></div>
                     )}
-                    <div className={`font-medium ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>
+                    <div className={`font-medium ${isCorrect ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                       {isCorrect ? '✓ Correct' : '✗ Incorrect'}
                     </div>
                   </div>
