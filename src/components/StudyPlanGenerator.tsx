@@ -8,6 +8,7 @@ import { generateStudyPlan } from "@/actions/study";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Calendar, Clock, Target, BookOpen, Sparkles } from "lucide-react";
+import "@/styles/study-plan.css";
 
 interface StudyPlanGeneratorProps {
   userId: string;
@@ -22,14 +23,8 @@ interface StudyPlanGeneratorProps {
 }
 
 interface StudyPlan {
-  subjectId: string;
+  htmlTable: string;
   subjectName: string;
-  tasks: Array<{
-    day: number;
-    task: string;
-    duration: number;
-    type: string;
-  }>;
   totalDays: number;
   examDate?: Date;
 }
@@ -54,12 +49,22 @@ export default function StudyPlanGenerator({
 
     setIsGenerating(true);
     try {
-      const plan = await generateStudyPlan(userId, selectedSubject, {
+      const htmlTable = await generateStudyPlan(userId, selectedSubject, {
         studyStyle,
         dailyStudyTime,
       });
+
+      const selectedSubjectData = subjects.find(s => s.id === selectedSubject);
       
-      setStudyPlan(plan);
+      setStudyPlan({
+        htmlTable,
+        subjectName: selectedSubjectData?.name || "Study Plan",
+        totalDays: selectedSubjectData?.examDate 
+          ? Math.ceil((selectedSubjectData.examDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+          : 14,
+        examDate: selectedSubjectData?.examDate || undefined
+      });
+
       toast.success("Study plan generated successfully!");
     } catch (error) {
       toast.error("Failed to generate study plan");
@@ -95,7 +100,7 @@ export default function StudyPlanGenerator({
           Generate Study Plan
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="size-5" />
@@ -179,23 +184,11 @@ export default function StudyPlanGenerator({
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {studyPlan.tasks.map((task, index) => (
-                    <div key={index} className="flex items-start gap-3 p-3 rounded-lg border">
-                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium">
-                        {task.day}
-                      </div>
-                      <div className="flex-1">
-                        <div className="font-medium">{task.task}</div>
-                        <div className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
-                          <span className="px-2 py-1 bg-secondary rounded text-xs">
-                            {task.type}
-                          </span>
-                          <span>{formatDuration(task.duration)}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                <div className="w-full overflow-x-auto">
+                  <div 
+                    className="study-plan-table"
+                    dangerouslySetInnerHTML={{ __html: studyPlan.htmlTable }}
+                  />
                 </div>
               </CardContent>
             </Card>

@@ -173,7 +173,7 @@ export default function AdminBillingManager({ initialRequests }: AdminBillingMan
                             Manage
                           </Button>
                         </DialogTrigger>
-                        <DialogContent className="max-w-md">
+                        <DialogContent className="max-w-lg">
                           <DialogHeader>
                             <DialogTitle>Manage Request</DialogTitle>
                             <DialogDescription>

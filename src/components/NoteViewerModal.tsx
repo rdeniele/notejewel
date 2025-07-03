@@ -56,7 +56,53 @@ export default function NoteViewerModal({
           prompt = `Based on these notes, create 5 multiple-choice questions:\n\n${note.content}\n\nFormat as:\n1. Question?\nA) Option A\nB) Option B\nC) Option C\nD) Option D\nAnswer: A`;
           break;
         case 'studyPlan':
-          prompt = `Create a study plan based on these notes:\n\n${note.content}\n\nInclude:\n- Key topics to focus on\n- Suggested study activities\n- Time allocation recommendations`;
+          prompt = `Create a personalized study plan based on the following note content:
+
+Note Title: ${note.title || "Untitled Note"}
+Note Content: ${note.content}
+
+Generate a 7-day study plan with specific tasks for each day. Each task should:
+1. Be based on the content of this note
+2. Take approximately 30-60 minutes
+3. Include a mix of review, practice, and deeper understanding
+4. Be specific and actionable
+
+Format the response as an HTML table with the following structure:
+<table>
+<thead>
+<tr>
+<th>Day</th>
+<th>Date</th>
+<th>Task Description</th>
+<th>Duration</th>
+<th>Type</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Today + 0 days</td>
+<td>Specific task description here</td>
+<td>45 min</td>
+<td>Review</td>
+<td>High</td>
+</tr>
+...continue for all 7 days
+</tbody>
+</table>
+
+Task Types to use: Review, Practice, Deep Study, Quiz/Self-Test, Application, Summary
+Priority Levels: High, Medium, Low
+
+Make sure to:
+- Include realistic, specific task descriptions based on the note content
+- Vary the task types appropriately 
+- Assign higher priority to foundational concepts early and review sessions later
+- Include regular practice and self-assessment
+- Make the plan progressive and logical
+
+Only return the HTML table, no additional text or formatting.`;
           break;
         case 'conceptMap':
           prompt = `Create a concept map outline for these notes:\n\n${note.content}\n\nOrganize as:\n• Main Concept 1\n  - Sub-concept 1.1\n  - Sub-concept 1.2\n• Main Concept 2\n  - Sub-concept 2.1`;
@@ -95,7 +141,7 @@ export default function NoteViewerModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-start justify-between">
             <div className="flex-1">

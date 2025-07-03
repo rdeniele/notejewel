@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import VisualConceptMap from "./VisualConceptMap";
+import "@/styles/study-plan.css";
 
 interface AIModalProps {
   isOpen: boolean;
@@ -680,8 +681,11 @@ Make sure each question has exactly 4 options (A, B, C, D) and tests something s
             ) : action === "quiz" ? (
               showQuizSetup ? renderQuizSetup() : renderQuiz()
             ) : action === "studyPlan" ? (
-              <div className="prose max-w-none whitespace-pre-wrap">
-                {aiResult}
+              <div className="w-full overflow-x-auto">
+                <div 
+                  className="study-plan-table"
+                  dangerouslySetInnerHTML={{ __html: aiResult || '' }}
+                />
               </div>
             ) : action === "conceptMap" ? (
               <div className="space-y-6">

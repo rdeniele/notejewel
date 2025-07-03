@@ -52,42 +52,65 @@ Generate a ${daysUntilExam}-day study plan with specific tasks for each day. Eac
 3. Include a mix of review, practice, and new material
 4. Be specific and actionable
 
-Format the response as a JSON object with this structure:
-{
-  "subjectId": "${subjectId}",
-  "subjectName": "${subject.name}",
-  "tasks": [
-    {
-      "day": 1,
-      "task": "Specific task description",
-      "duration": 45,
-      "type": "REVIEW|PRACTICE|NEW_MATERIAL"
-    }
-  ],
-  "totalDays": ${daysUntilExam}
-}
+Format the response as an HTML table with the following structure:
+<table>
+<thead>
+<tr>
+<th>Day</th>
+<th>Date</th>
+<th>Task Description</th>
+<th>Duration</th>
+<th>Type</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Today + 0 days</td>
+<td>Specific task description here</td>
+<td>45 min</td>
+<td>Review</td>
+<td>High</td>
+</tr>
+...continue for all ${daysUntilExam} days
+</tbody>
+</table>
 
-Focus on creating a realistic, achievable plan that builds knowledge progressively.`;
+Task Types to use: Review, Practice, New Material, Quiz/Assessment, Final Review
+Priority Levels: High, Medium, Low
+
+Make sure to:
+- Include realistic, specific task descriptions
+- Vary the task types appropriately 
+- Assign higher priority to foundational concepts early and review sessions near the exam
+- Include regular practice and assessment days
+- Make the plan progressive and logical
+
+Only return the HTML table, no additional text or formatting.`;
 
     const model = gemini.getGenerativeModel({ model: "gemini-1.5-flash" });
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
     
-    // Extract JSON from the response
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error("Failed to parse AI response");
-    }
+    // Clean up the HTML table response
+    const cleanedText = text.trim().replace(/```html|```/g, '');
     
-    const studyPlan = JSON.parse(jsonMatch[0]);
-
-    // Save the study plan to the database
+    // Save the study plan to the database (store as HTML string)
     await prisma.studyPlan.create({
       data: {
         userId,
         subjectId,
-        planData: studyPlan,
+        planData: {
+          subjectId,
+          subjectName: subject.name,
+          htmlTable: cleanedText,
+          totalDays: daysUntilExam,
+          studyStyle: options.studyStyle,
+          dailyStudyTime: options.dailyStudyTime,
+          createdAt: new Date().toISOString()
+        },
       },
     });
 
@@ -104,7 +127,7 @@ Focus on creating a realistic, achievable plan that builds knowledge progressive
     await incrementUsage(userId);
 
     revalidatePath("/");
-    return studyPlan;
+    return cleanedText;
   } catch (error) {
     console.error("Error generating study plan:", error);
     throw new Error("Failed to generate study plan");

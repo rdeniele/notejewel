@@ -1,0 +1,82 @@
+/* Study Plan Table Styles */
+.study-plan-table table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  font-size: 0.875rem;
+  background-color: hsl(var(--background));
+  border-radius: 0.375rem;
+  overflow: hidden;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.study-plan-table th {
+  background-color: hsl(var(--muted));
+  color: hsl(var(--foreground));
+  font-weight: 600;
+  padding: 0.75rem;
+  text-align: left;
+  border: 1px solid hsl(var(--border));
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.study-plan-table td {
+  padding: 0.75rem;
+  border: 1px solid hsl(var(--border));
+  vertical-align: top;
+  color: hsl(var(--foreground));
+}
+
+.study-plan-table tbody tr:nth-child(even) {
+  background-color: hsl(var(--muted) / 0.3);
+}
+
+.study-plan-table tbody tr:hover {
+  background-color: hsl(var(--muted) / 0.5);
+  transition: background-color 0.2s ease;
+}
+
+.study-plan-table td:first-child {
+  font-weight: 600;
+  text-align: center;
+  background-color: hsl(var(--primary) / 0.1);
+  color: hsl(var(--primary));
+}
+
+.study-plan-table td:nth-child(5) {
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.study-plan-table td:nth-child(6) {
+  font-weight: 500;
+}
+
+/* Priority styling */
+.study-plan-table td:last-child {
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .study-plan-table {
+    font-size: 0.75rem;
+  }
+  
+  .study-plan-table th,
+  .study-plan-table td {
+    padding: 0.5rem;
+  }
+}
+
+/* Dark mode specific adjustments */
+@media (prefers-color-scheme: dark) {
+  .study-plan-table table {
+    border: 1px solid hsl(var(--border));
+  }
+}
