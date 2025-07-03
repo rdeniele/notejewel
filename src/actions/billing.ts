@@ -245,4 +245,57 @@ export async function getPlanPrice(planType: "FREE" | "BASIC" | "PREMIUM"): Prom
     default:
       return "$0";
   }
-} 
+}
+
+export async function grantBonusGenerations(userId: string, bonusAmount: number = 2) {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    }) as UserWithBilling | null;
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Reset daily count if it's a new day first
+    const now = new Date();
+    const lastReset = new Date(user.lastGenerationReset);
+    const isNewDay = now.getDate() !== lastReset.getDate() || 
+                     now.getMonth() !== lastReset.getMonth() || 
+                     now.getFullYear() !== lastReset.getFullYear();
+
+    let currentUsed = user.dailyGenerationsUsed;
+    let resetDate = user.lastGenerationReset;
+
+    if (isNewDay) {
+      currentUsed = 0;
+      resetDate = now;
+    }
+
+    // Grant bonus by reducing daily used count (effectively increasing remaining)
+    const newUsedCount = Math.max(0, currentUsed - bonusAmount);
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        dailyGenerationsUsed: newUsedCount,
+        lastGenerationReset: resetDate,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any,
+    });
+
+    revalidatePath("/");
+    
+    const limit = getPlanLimit(user.planType);
+    const newRemaining = limit - newUsedCount;
+    
+    return {
+      success: true,
+      newRemaining: Math.max(0, newRemaining),
+      bonusGranted: bonusAmount
+    };
+  } catch (error) {
+    console.error("Error granting bonus generations:", error);
+    throw new Error("Failed to grant bonus generations");
+  }
+}

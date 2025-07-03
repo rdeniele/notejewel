@@ -66,6 +66,11 @@ export default function StudyPlanGenerator({
       });
 
       toast.success("Study plan generated successfully!");
+      
+      // Refresh page to update AI generations count
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     } catch (error) {
       toast.error("Failed to generate study plan");
       console.error("Study plan generation error:", error);

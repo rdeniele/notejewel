@@ -49,6 +49,11 @@ export default function QuizGenerator({ userId, subjectId, noteIds }: QuizGenera
       setSelectedAnswers(new Array(generatedQuiz.questions.length).fill(""));
       setShowResults(false);
       toast.success("Quiz generated successfully!");
+      
+      // Refresh page to update AI generations count
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     } catch (error) {
       toast.error("Failed to generate quiz");
       console.error("Quiz generation error:", error);

@@ -175,9 +175,9 @@ export default function SubjectQuizModal({
         hard: "challenging difficulty with analysis and synthesis questions"
       };
       
-      // Combine all notes content for the subject
-      const allNotesContent = subjectNotes.map(note => 
-        `Note: ${note.title}\n${note.text}`
+      // Combine all notes content for the subject with clear separation
+      const allNotesContent = subjectNotes.map((note, index) => 
+        `=== NOTE ${index + 1}: ${note.title} ===\n${note.text}\n=== END OF NOTE ${index + 1} ===`
       ).join('\n\n');
       
       const prompt = `You are creating a quiz based SPECIFICALLY on the notes provided below from the subject "${subjectName}". The questions must be directly derived from the information in these notes - do not use general knowledge outside of what's written in the notes.
@@ -186,13 +186,18 @@ Generate exactly ${questionCount} multiple-choice questions at ${difficultyText[
 
 REQUIREMENTS:
 - Questions must be based ONLY on information explicitly mentioned in the notes
-- Test key concepts, facts, definitions, or examples from the notes
-- Include specific details, names, dates, or terminology mentioned in the notes
+- DIVERSIFY questions across ALL notes provided - don't focus on just one note
+- Draw questions from different notes to ensure comprehensive coverage of the subject
+- Test key concepts, facts, definitions, or examples from various notes
+- Include specific details, names, dates, or terminology mentioned across different notes
+- Aim to have questions that represent content from multiple notes when possible
 - For ${difficulty} difficulty: ${difficultyText[difficulty]}
 - Generate exactly ${questionCount} questions, no more, no less
 
 NOTES CONTENT:
 ${allNotesContent}
+
+IMPORTANT: You have ${subjectNotes.length} separate notes above. Make sure to create questions that draw from different notes to ensure comprehensive coverage. Don't focus on just one note - spread your questions across all available notes when possible.
 
 Use this EXACT format for each question:
 
@@ -257,7 +262,7 @@ Remember: Generate exactly ${questionCount} questions in the format shown above.
           setScore(0);
           setTotalQuestions(alternativeQuestions.length);
           setQuizError(null);
-          toast.success(`Subject quiz generated with ${alternativeQuestions.length} questions!`);
+          toast.success(`Subject quiz generated with ${alternativeQuestions.length} questions from ${subjectNotes.length} notes!`);
           return;
         }
       }
@@ -275,7 +280,7 @@ Remember: Generate exactly ${questionCount} questions in the format shown above.
       setTotalQuestions(newQuestions.length);
       setQuizError(null);
       
-      toast.success(`Subject quiz generated with ${questionCount} ${difficulty} questions!`);
+      toast.success(`Subject quiz generated with ${questionCount} ${difficulty} questions from ${subjectNotes.length} notes!`);
     } catch (error: unknown) {
       const errMsg = typeof error === 'object' && error && 'message' in error ? (error as { message?: string }).message : String(error);
       setQuizError(errMsg || 'Failed to generate quiz questions');
@@ -325,9 +330,9 @@ Remember: Generate exactly ${questionCount} questions in the format shown above.
         hard: "challenging difficulty with analysis and synthesis questions"
       };
       
-      // Combine all notes content for the subject
-      const allNotesContent = subjectNotes.map(note => 
-        `Note: ${note.title}\n${note.text}`
+      // Combine all notes content for the subject with clear separation  
+      const allNotesContent = subjectNotes.map((note, index) => 
+        `=== NOTE ${index + 1}: ${note.title} ===\n${note.text}\n=== END OF NOTE ${index + 1} ===`
       ).join('\n\n');
       
       const prompt = `You are creating a NEW set of quiz questions based SPECIFICALLY on the notes provided below from the subject "${subjectName}". These should be different from any previous questions but still test the same note content. The questions must be directly derived from the information in these notes - do not use general knowledge outside of what's written in the notes.
@@ -336,14 +341,19 @@ Generate exactly ${questionCount} NEW multiple-choice questions at ${difficultyT
 
 REQUIREMENTS:
 - Questions must be based ONLY on information explicitly mentioned in the notes
-- Test different aspects, details, or perspectives from the same note content
-- Include specific details, names, dates, or terminology mentioned in the notes
-- Create questions that approach the content from different angles than previous questions
+- DIVERSIFY questions across ALL notes provided - don't focus on just one note
+- Draw questions from different notes to ensure comprehensive coverage of the subject
+- Test different aspects, details, or perspectives from various notes in the subject
+- Include specific details, names, dates, or terminology mentioned across different notes
+- Create questions that approach the content from different angles and cover multiple notes
+- Aim to have questions that represent content from various notes when possible
 - For ${difficulty} difficulty: ${difficultyText[difficulty]}
 - Generate exactly ${questionCount} questions, no more, no less
 
 NOTES CONTENT:
 ${allNotesContent}
+
+IMPORTANT: You have ${subjectNotes.length} separate notes above. Make sure to create NEW questions that draw from different notes to ensure comprehensive coverage. Don't focus on just one note - spread your questions across all available notes when possible.
 
 Format each question as:
 1. [Question text based on note content]?
@@ -386,7 +396,7 @@ Make sure each question has exactly 4 options (A, B, C, D) and tests something s
       setTotalQuestions(newQuestions.length);
       setQuizError(null);
       
-      toast.success("New subject quiz questions generated!");
+      toast.success(`New subject quiz questions generated from ${subjectNotes.length} notes!`);
     } catch (error: unknown) {
       const errMsg = typeof error === 'object' && error && 'message' in error ? (error as { message?: string }).message : String(error);
       setQuizError(errMsg || 'Failed to generate new questions');
@@ -453,7 +463,7 @@ Make sure each question has exactly 4 options (A, B, C, D) and tests something s
             Test your knowledge of <strong>{subjectName}</strong>
           </p>
           <div className="text-sm text-muted-foreground">
-            Based on {subjectNotes.length} note{subjectNotes.length !== 1 ? 's' : ''}
+            Questions will be drawn from all {subjectNotes.length} note{subjectNotes.length !== 1 ? 's' : ''} in this subject
           </div>
         </div>
 

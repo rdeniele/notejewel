@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { updateUserStreak } from "@/actions/users";
 import { logStudyActivity } from "@/actions/study";
+import { grantBonusGenerations } from "@/actions/billing";
 import { toast } from "sonner";
 import { 
   Calendar, 
@@ -87,6 +88,12 @@ export default function StudyDashboard({ user, subjects, studyLogs, billingInfo 
   const [aiResult, setAiResult] = useState<string | null>(null);
   const [isAILoading, setIsAILoading] = useState(false);
   const [currentSubjects, setCurrentSubjects] = useState(subjects);
+  
+  // Pomodoro Timer State
+  const [pomodoroTime, setPomodoroTime] = useState(25 * 60); // 25 minutes in seconds
+  const [isBreakTime, setIsBreakTime] = useState(false);
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout | null>(null);
   const [currentStudyLogs, setCurrentStudyLogs] = useState(studyLogs);
 
   useEffect(() => {
@@ -150,99 +157,18 @@ export default function StudyDashboard({ user, subjects, studyLogs, billingInfo 
   };
 
   const getStudySuggestions = () => {
-    const suggestions: Array<{
-      type: string;
-      message: string;
-      action: string;
-      subjectId?: string;
-    }> = [];
-    const today = new Date();
+    // Simple basic suggestion - no complex logic
+    if (currentSubjects.length === 0) {
+      return [];
+    }
     
-    // Check for upcoming exams
-    const upcomingExams = getUpcomingExams();
-    if (upcomingExams.length > 0) {
-      const nextExam = upcomingExams[0];
-      const daysUntil = getDaysUntilExam(nextExam.examDate!);
-      if (daysUntil <= 3) {
-        suggestions.push({
-          type: "urgent",
-          message: `Your ${nextExam.name} exam is in ${daysUntil} day${daysUntil === 1 ? '' : 's'}!`,
-          action: "Generate a study plan",
-          subjectId: nextExam.id
-        });
-      } else if (daysUntil <= 7) {
-        suggestions.push({
-          type: "warning",
-          message: `Your ${nextExam.name} exam is in ${daysUntil} days.`,
-          action: "Take a subject quiz",
-          subjectId: nextExam.id
-        });
-      }
-    }
-
-    // Check for subjects that haven't been studied recently
-    const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const inactiveSubjects = currentSubjects.filter(subject => {
-      const lastActivity = currentStudyLogs
-        .filter(log => log.subject?.name === subject.name)
-        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
-      
-      return !lastActivity || new Date(lastActivity.timestamp) < weekAgo;
-    });
-
-    if (inactiveSubjects.length > 0) {
-      suggestions.push({
-        type: "info",
-        message: `You haven't studied ${inactiveSubjects[0].name} this week.`,
-        action: "Take a subject quiz",
-        subjectId: inactiveSubjects[0].id
-      });
-    }
-
-    // Suggest subjects with many notes for comprehensive quizzes
-    const subjectsWithManyNotes = currentSubjects
-      .filter(subject => subject.notes.length >= 3)
-      .sort((a, b) => b.notes.length - a.notes.length)
-      .slice(0, 2);
-
-    subjectsWithManyNotes.forEach(subject => {
-      suggestions.push({
-        type: "success",
-        message: `${subject.name} has ${subject.notes.length} notes ready for a comprehensive quiz.`,
-        action: "Take a subject quiz",
-        subjectId: subject.id
-      });
-    });
-
-    // Suggest study plan for subjects with upcoming exams
-    const subjectsNeedingStudyPlans = currentSubjects
-      .filter(subject => subject.examDate && getDaysUntilExam(subject.examDate) <= 14)
-      .slice(0,1);
-
-    subjectsNeedingStudyPlans.forEach(subject => {
-      suggestions.push({
-        type: "info",
-        message: `Create a study plan for ${subject.name} (exam in ${getDaysUntilExam(subject.examDate!)} days).`,
-        action: "Generate study plan",
-        subjectId: subject.id
-      });
-    });
-
-    // Suggest concept mapping for subjects with many interconnected notes
-    const subjectsForConceptMaps = currentSubjects
-      .filter(subject => subject.notes.length >= 5)
-      .slice(0, 1);
-
-    subjectsForConceptMaps.forEach(subject => {
-      suggestions.push({
-        type: "info",
-        message: `${subject.name} has ${subject.notes.length} notes - perfect for creating a concept map.`,
-        action: "Generate concept map",
-        subjectId: subject.id
-      });
-    });
-
-    return suggestions;
+    return [{
+      type: "info",
+      message: "Create notes and take quizzes to improve your learning. Stay consistent with daily study sessions.",
+      action: "Get started",
+      priority: 1,
+      icon: "💡"
+    }];
   };
 
   const handleStudySuggestion = (suggestion: {
@@ -250,48 +176,12 @@ export default function StudyDashboard({ user, subjects, studyLogs, billingInfo 
     message: string;
     action: string;
     subjectId?: string;
+    priority: number;
+    icon?: string;
   }) => {
-    if (suggestion.action === "Take a subject quiz" && suggestion.subjectId) {
-      const subject = currentSubjects.find(s => s.id === suggestion.subjectId);
-      if (subject) {
-        setSelectedSubjectForQuiz({
-          name: subject.name,
-          notes: subject.notes.map(note => ({
-            id: note.id,
-            title: note.title || "Untitled Note",
-            text: note.text
-          }))
-        });
-        setShowSubjectQuiz(true);
-      }
-    } else if (suggestion.action === "Generate a study plan" && suggestion.subjectId) {
-      const subject = currentSubjects.find(s => s.id === suggestion.subjectId);
-      if (subject) {
-        setSelectedSubjectForAI({
-          name: subject.name,
-          notes: subject.notes.map(note => ({
-            id: note.id,
-            title: note.title || "Untitled Note",
-            text: note.text
-          }))
-        });
-        setAiAction("studyPlan");
-        setShowAIModal(true);
-      }
-    } else if (suggestion.action === "Generate concept map" && suggestion.subjectId) {
-      const subject = currentSubjects.find(s => s.id === suggestion.subjectId);
-      if (subject) {
-        setSelectedSubjectForAI({
-          name: subject.name,
-          notes: subject.notes.map(note => ({
-            id: note.id,
-            title: note.title || "Untitled Note",
-            text: note.text
-          }))
-        });
-        setAiAction("conceptMap");
-        setShowAIModal(true);
-      }
+    // Simple basic action - just show a toast message
+    if (suggestion.action === "Get started") {
+      toast.success("Start by creating subjects and notes to begin your study journey!");
     }
   };
 
@@ -321,6 +211,25 @@ export default function StudyDashboard({ user, subjects, studyLogs, billingInfo 
     setShowAIModal(true);
   };
 
+  const handleAIModalClose = () => {
+    setShowAIModal(false);
+    setSelectedSubjectForAI(null);
+    setAiResult(null);
+    // Refresh the page to update AI generations count
+    setTimeout(() => {
+      window.location.reload();
+    }, 500);
+  };
+
+  const handleSubjectQuizClose = () => {
+    setShowSubjectQuiz(false);
+    setSelectedSubjectForQuiz(null);
+    // Refresh the page to update AI generations count
+    setTimeout(() => {
+      window.location.reload();
+    }, 500);
+  };
+
   const handleStudyAction = async (actionType: "NOTE_CREATED" | "NOTE_UPDATED" | "QUIZ_TAKEN" | "STUDY_PLAN_COMPLETED" | "SUBJECT_VIEWED", subjectId?: string) => {
     try {
       await logStudyActivity(user.id, actionType, subjectId);
@@ -330,60 +239,396 @@ export default function StudyDashboard({ user, subjects, studyLogs, billingInfo 
     }
   };
 
+  // State for streak reward system
+  const [lastClaimDate, setLastClaimDate] = useState<Date | null>(null);
+  const [canClaimReward, setCanClaimReward] = useState(true);
+
+  // Check if user can claim daily reward (24 hour cooldown)
+  useEffect(() => {
+    const checkClaimEligibility = () => {
+      const lastClaim = localStorage.getItem(`lastClaim_${user.id}`);
+      if (lastClaim) {
+        const lastClaimTime = new Date(lastClaim);
+        const now = new Date();
+        const hoursSinceLastClaim = (now.getTime() - lastClaimTime.getTime()) / (1000 * 60 * 60);
+        
+        if (hoursSinceLastClaim < 24) {
+          setCanClaimReward(false);
+          setLastClaimDate(lastClaimTime);
+        } else {
+          setCanClaimReward(true);
+          setLastClaimDate(null);
+        }
+      }
+    };
+
+    checkClaimEligibility();
+    // Check every minute for real-time updates
+    const interval = setInterval(checkClaimEligibility, 60000);
+    return () => clearInterval(interval);
+  }, [user.id]);
+
+  const handleClaimReward = async () => {
+    if (!canClaimReward) return;
+
+    try {
+      const now = new Date();
+      localStorage.setItem(`lastClaim_${user.id}`, now.toISOString());
+      setCanClaimReward(false);
+      setLastClaimDate(now);
+      
+      // Update streak count
+      await updateUserStreak(user.id);
+      
+      // Grant bonus AI generations
+      await grantBonusGenerations(user.id, 2);
+      
+      toast.success("🔥 Daily streak reward claimed! +2 AI generations!");
+      
+      // Trigger a refresh of the parent component data
+      window.location.reload();
+    } catch (error) {
+      console.error("Error claiming reward:", error);
+      toast.error("Failed to claim reward. Please try again.");
+    }
+  };
+
+  const getTimeUntilNextClaim = () => {
+    if (!lastClaimDate) return null;
+    
+    const now = new Date();
+    const nextClaimTime = new Date(lastClaimDate.getTime() + 24 * 60 * 60 * 1000);
+    const timeUntil = nextClaimTime.getTime() - now.getTime();
+    
+    if (timeUntil <= 0) return null;
+    
+    const hours = Math.floor(timeUntil / (1000 * 60 * 60));
+    const minutes = Math.floor((timeUntil % (1000 * 60 * 60)) / (1000 * 60));
+    
+    return `${hours}h ${minutes}m`;
+  };
+
+  // Pomodoro Timer Functions
+  const startTimer = () => {
+    if (timerInterval) {
+      clearInterval(timerInterval);
+    }
+    
+    setIsTimerRunning(true);
+    const interval = setInterval(() => {
+      setPomodoroTime((prevTime) => {
+        if (prevTime <= 1) {
+          // Timer finished
+          clearInterval(interval);
+          setIsTimerRunning(false);
+          
+          if (isBreakTime) {
+            // Break finished, start work session
+            setIsBreakTime(false);
+            setPomodoroTime(25 * 60);
+            toast.success("Break time over! Ready for another focused session?");
+          } else {
+            // Work session finished, start break
+            setIsBreakTime(true);
+            setPomodoroTime(5 * 60);
+            toast.success("Great work! Time for a 5-minute break.");
+          }
+          return 0;
+        }
+        return prevTime - 1;
+      });
+    }, 1000);
+    
+    setTimerInterval(interval);
+  };
+
+  const pauseTimer = () => {
+    if (timerInterval) {
+      clearInterval(timerInterval);
+      setTimerInterval(null);
+    }
+    setIsTimerRunning(false);
+  };
+
+  const resetTimer = () => {
+    if (timerInterval) {
+      clearInterval(timerInterval);
+      setTimerInterval(null);
+    }
+    setIsTimerRunning(false);
+    setIsBreakTime(false);
+    setPomodoroTime(25 * 60);
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+      }
+    };
+  }, [timerInterval]);
+
   return (
     <div className="space-y-6">
-      {/* Header with Streak and Quote */}
-      <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Flame className="size-5 text-orange-500" />
-            <span className="text-lg font-semibold">
-              {user.streakCount} day{user.streakCount !== 1 ? 's' : ''} streak
-            </span>
-          </div>
-          <Badge variant="secondary" className="gap-1">
-            <Brain className="size-3" />
-            {user.studyStyle}
-          </Badge>
-        </div>
-        <div className="text-sm text-muted-foreground max-w-md text-right">
-          "{motivationalQuote}"
-        </div>
+      {/* Enhanced Header with Streak Visualization and Stats */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {/* Enhanced Streak Card with Reward System */}
+        <Card className="border-2" style={{ borderColor: 'var(--primary)', backgroundColor: 'var(--card)' }}>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <Flame className="size-5" style={{ color: 'var(--primary)' }} />
+                  <span className="text-sm font-medium" style={{ color: 'var(--primary)' }}>Study Streak</span>
+                </div>
+                <div className="text-3xl font-bold" style={{ color: 'var(--primary)' }}>
+                  {user.streakCount}
+                </div>
+                <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                  day{user.streakCount !== 1 ? 's' : ''} in a row
+                </p>
+              </div>
+              <div className="flex flex-col items-center">
+                {user.streakCount >= 7 && (
+                  <Badge variant="secondary" className="mb-2" style={{ backgroundColor: 'var(--primary)', color: 'var(--primary-foreground)' }}>
+                    🔥 On Fire!
+                  </Badge>
+                )}
+                <div className="flex gap-1 mb-3">
+                  {Array.from({length: Math.min(user.streakCount, 7)}, (_, i) => (
+                    <div key={i} className="w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--primary)' }}></div>
+                  ))}
+                  {user.streakCount > 7 && (
+                    <span className="text-xs ml-1" style={{ color: 'var(--primary)' }}>+{user.streakCount - 7}</span>
+                  )}
+                </div>
+                
+                {/* Daily Reward Button */}
+                <Button
+                  size="sm"
+                  variant={canClaimReward ? "default" : "outline"}
+                  onClick={handleClaimReward}
+                  disabled={!canClaimReward}
+                  className="text-xs px-2 py-1 h-auto"
+                  style={canClaimReward ? { backgroundColor: 'var(--primary)', color: 'var(--primary-foreground)' } : {}}
+                >
+                  {canClaimReward ? (
+                    <>
+                      <Sparkles className="size-3 mr-1" />
+                      Claim +2 AI
+                    </>
+                  ) : (
+                    <>
+                      <Clock className="size-3 mr-1" />
+                      {getTimeUntilNextClaim()}
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Enhanced AI Generations Card */}
+        {billingInfo && (
+          <Card className={`border-2 ${billingInfo.remaining <= 2 ? '' : ''}`} style={{ 
+            borderColor: billingInfo.remaining <= 2 ? 'var(--destructive)' : 'var(--secondary)', 
+            backgroundColor: 'var(--card)' 
+          }}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Sparkles className="size-5" style={{ color: 'var(--primary)' }} />
+                    <span className="text-sm font-medium" style={{ color: 'var(--card-foreground)' }}>AI Generations</span>
+                  </div>
+                  <div className="text-3xl font-bold" style={{ color: 'var(--primary)' }}>
+                    {billingInfo.remaining === Infinity ? "∞" : billingInfo.remaining}
+                  </div>
+                  <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                    remaining today
+                  </p>
+                </div>
+                <div className="text-right">
+                  <Badge variant="secondary" className="mb-2" style={{ backgroundColor: 'var(--secondary)', color: 'var(--secondary-foreground)' }}>
+                    {billingInfo.planType}
+                  </Badge>
+                  <div className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                    {billingInfo.dailyGenerationsUsed} used
+                  </div>
+                  {billingInfo.remaining <= 2 && billingInfo.planType !== "PREMIUM" && (
+                    <div className="text-xs mt-1 font-medium" style={{ color: 'var(--destructive)' }}>
+                      Upgrade for unlimited
+                    </div>
+                  )}
+                  {billingInfo.limit !== Infinity && (
+                    <div className="text-xs mt-1" style={{ color: 'var(--muted-foreground)' }}>
+                      of {billingInfo.limit} daily
+                    </div>
+                  )}
+                </div>
+              </div>
+              {billingInfo.limit !== Infinity && (
+                <div className="mt-3">
+                  <div className="w-full rounded-full h-2" style={{ backgroundColor: 'var(--muted)' }}>
+                    <div 
+                      className="h-2 rounded-full transition-all duration-300" 
+                      style={{
+                        backgroundColor: billingInfo.remaining <= 2 ? 'var(--destructive)' : 'var(--primary)',
+                        width: `${Math.min((billingInfo.dailyGenerationsUsed / billingInfo.limit) * 100, 100)}%`
+                      }}
+                    ></div>
+                  </div>
+                  <div className="flex justify-between text-xs mt-1" style={{ color: 'var(--muted-foreground)' }}>
+                    <span>0</span>
+                    <span>{billingInfo.limit}</span>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Study Style & Time Card */}
+        <Card className="border-2" style={{ borderColor: 'var(--secondary)', backgroundColor: 'var(--card)' }}>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <Brain className="size-5" style={{ color: 'var(--primary)' }} />
+                  <span className="text-sm font-medium" style={{ color: 'var(--card-foreground)' }}>Study Style</span>
+                </div>
+                <div className="text-2xl font-bold" style={{ color: 'var(--primary)' }}>
+                  {user.studyStyle}
+                </div>
+                <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                  {user.dailyStudyTime}m daily goal
+                </p>
+              </div>
+              <div className="text-right">
+                <Badge variant="secondary" style={{ backgroundColor: 'var(--secondary)', color: 'var(--secondary-foreground)' }}>
+                  Optimized
+                </Badge>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Progress Summary Card */}
+        <Card className="border-2" style={{ borderColor: 'var(--secondary)', backgroundColor: 'var(--card)' }}>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <TrendingUp className="size-5" style={{ color: 'var(--primary)' }} />
+                  <span className="text-sm font-medium" style={{ color: 'var(--card-foreground)' }}>Progress</span>
+                </div>
+                <div className="text-2xl font-bold" style={{ color: 'var(--primary)' }}>
+                  {currentSubjects.reduce((total, subject) => total + subject.notes.length, 0)}
+                </div>
+                <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                  notes across {currentSubjects.length} subjects
+                </p>
+              </div>
+              <div className="text-right">
+                <div className="text-sm font-medium" style={{ color: 'var(--muted-foreground)' }}>
+                  {getRecentActivity().length} recent activities
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Study Suggestions */}
+      {/* Motivational Quote and Pomodoro Timer Row */}
+      <div className="grid gap-4 md:grid-cols-2">
+        {/* Motivational Quote */}
+        <Card style={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)' }}>
+          <CardContent className="p-4">
+            <div className="text-center">
+              <p className="italic font-medium" style={{ color: 'var(--muted-foreground)' }}>"{motivationalQuote}"</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Pomodoro Timer */}
+        <Card style={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)' }}>
+          <CardContent className="p-4">
+            <div className="text-center space-y-3">
+              <div className="flex items-center justify-center gap-2">
+                <Clock className="size-4" style={{ color: 'var(--primary)' }} />
+                <span className="text-sm font-medium" style={{ color: 'var(--card-foreground)' }}>
+                  {isBreakTime ? "Break Time" : "Focus Time"}
+                </span>
+              </div>
+              
+              <div className="text-3xl font-bold" style={{ 
+                color: isBreakTime ? 'var(--chart-2)' : 'var(--primary)' 
+              }}>
+                {formatTime(pomodoroTime)}
+              </div>
+              
+              <div className="flex justify-center gap-2">
+                <Button
+                  size="sm"
+                  variant={isTimerRunning ? "secondary" : "default"}
+                  onClick={isTimerRunning ? pauseTimer : startTimer}
+                  style={!isTimerRunning ? {
+                    backgroundColor: 'var(--primary)',
+                    color: 'var(--primary-foreground)'
+                  } : {}}
+                >
+                  {isTimerRunning ? "Pause" : "Start"}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={resetTimer}
+                  style={{ borderColor: 'var(--border)', color: 'var(--muted-foreground)' }}
+                >
+                  Reset
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Simple Study Tip */}
       {getStudySuggestions().length > 0 && (
-        <Card className="border-l-4 border-l-blue-500">
+        <Card style={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)' }}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Sparkles className="size-5" />
-              Study Suggestions
+              <Sparkles className="size-5" style={{ color: 'var(--primary)' }} />
+              Study Tip
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {getStudySuggestions().map((suggestion, index) => (
-                <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                  <div className="flex items-center gap-2">
-                    {suggestion.type === "urgent" ? (
-                      <AlertTriangle className="size-4 text-red-500" />
-                    ) : suggestion.type === "warning" ? (
-                      <AlertTriangle className="size-4 text-yellow-500" />
-                    ) : (
-                      <CheckCircle className="size-4 text-blue-500" />
-                    )}
-                    <span className="text-sm">{suggestion.message}</span>
-                  </div>
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => handleStudySuggestion(suggestion)}
-                  >
-                    {suggestion.action}
-                  </Button>
+            {getStudySuggestions().map((suggestion, index) => (
+              <div key={index} className="flex items-center justify-between p-3 rounded-lg" style={{ backgroundColor: 'var(--muted)' + '30' }}>
+                <div className="flex items-center gap-3">
+                  <div className="text-lg">{suggestion.icon}</div>
+                  <span className="text-sm" style={{ color: 'var(--card-foreground)' }}>
+                    {suggestion.message}
+                  </span>
                 </div>
-              ))}
-            </div>
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  style={{ borderColor: 'var(--primary)', color: 'var(--primary)' }}
+                  onClick={() => handleStudySuggestion(suggestion)}
+                >
+                  {suggestion.action}
+                </Button>
+              </div>
+            ))}
           </CardContent>
         </Card>
       )}
@@ -396,79 +641,16 @@ export default function StudyDashboard({ user, subjects, studyLogs, billingInfo 
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {/* Stats Cards */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Subjects</CardTitle>
-                <BookOpen className="size-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{currentSubjects.length}</div>
-                <p className="text-xs text-muted-foreground">
-                  Active study areas
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Notes</CardTitle>
-                <FileText className="size-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {currentSubjects.reduce((total, subject) => total + subject.notes.length, 0)}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Study materials created
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Daily Study Time</CardTitle>
-                <Clock className="size-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{user.dailyStudyTime}m</div>
-                <p className="text-xs text-muted-foreground">
-                  Available per day
-                </p>
-              </CardContent>
-            </Card>
-
-            {billingInfo && (
-              <Card className={billingInfo.remaining <= 2 ? "border-yellow-500 bg-yellow-50" : ""}>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">AI Generations</CardTitle>
-                  <Sparkles className="size-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {billingInfo.remaining === Infinity ? "∞" : billingInfo.remaining}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {billingInfo.planType} plan • {billingInfo.dailyGenerationsUsed} used today
-                  </p>
-                  {billingInfo.remaining <= 2 && billingInfo.planType !== "PREMIUM" && (
-                    <p className="text-xs text-yellow-600 mt-1">
-                      Consider upgrading for unlimited access
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-          </div>
-
           {/* Upcoming Exams */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Calendar className="size-5" />
+                <Calendar className="size-5" style={{ color: 'var(--primary)' }} />
                 Upcoming Exams
               </CardTitle>
+              <CardDescription>
+                Keep track of your exam schedule and preparation deadlines
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {getUpcomingExams().length > 0 ? (
@@ -476,22 +658,43 @@ export default function StudyDashboard({ user, subjects, studyLogs, billingInfo 
                   {getUpcomingExams().map((subject) => {
                     const daysUntil = getDaysUntilExam(subject.examDate!);
                     return (
-                      <div key={subject.id} className="flex items-center justify-between p-3 rounded-lg border">
-                        <div>
-                          <div className="font-medium">{subject.name}</div>
-                          <div className="text-sm text-muted-foreground">
-                            {subject.examDate?.toLocaleDateString()}
+                      <div key={subject.id} className="flex items-center justify-between p-4 rounded-lg border" style={{ backgroundColor: 'var(--muted)' + '20' }}>
+                        <div className="flex items-center gap-3">
+                          <div className={`w-3 h-3 rounded-full`} style={{ 
+                            backgroundColor: daysUntil <= 3 ? 'var(--destructive)' : 
+                                           daysUntil <= 7 ? 'var(--chart-2)' : 
+                                           'var(--primary)'
+                          }}></div>
+                          <div>
+                            <div className="font-medium" style={{ color: 'var(--card-foreground)' }}>{subject.name}</div>
+                            <div className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                              {subject.examDate?.toLocaleDateString('en-US', { 
+                                weekday: 'long', 
+                                year: 'numeric', 
+                                month: 'long', 
+                                day: 'numeric' 
+                              })}
+                            </div>
                           </div>
                         </div>
-                        <Badge variant={daysUntil <= 3 ? "destructive" : daysUntil <= 7 ? "secondary" : "outline"}>
-                          {daysUntil} day{daysUntil === 1 ? '' : 's'}
-                        </Badge>
+                        <div className="text-right">
+                          <Badge variant={daysUntil <= 3 ? "destructive" : daysUntil <= 7 ? "secondary" : "outline"}>
+                            {daysUntil} day{daysUntil === 1 ? '' : 's'}
+                          </Badge>
+                          <div className="text-xs mt-1" style={{ color: 'var(--muted-foreground)' }}>
+                            {subject.notes.length} notes
+                          </div>
+                        </div>
                       </div>
                     );
                   })}
                 </div>
               ) : (
-                <p className="text-muted-foreground">No upcoming exams scheduled.</p>
+                <div className="text-center py-8">
+                  <Calendar className="size-12 mx-auto mb-4" style={{ color: 'var(--muted-foreground)' + '50' }} />
+                  <p style={{ color: 'var(--muted-foreground)' }}>No upcoming exams scheduled.</p>
+                  <p className="text-sm mt-1" style={{ color: 'var(--muted-foreground)' }}>Add exam dates in the Subjects tab to get reminders and study suggestions.</p>
+                </div>
               )}
             </CardContent>
           </Card>
@@ -500,7 +703,7 @@ export default function StudyDashboard({ user, subjects, studyLogs, billingInfo 
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="size-5" />
+                <TrendingUp className="size-5" style={{ color: 'var(--primary)' }} />
                 Recent Activity
               </CardTitle>
             </CardHeader>
@@ -509,21 +712,21 @@ export default function StudyDashboard({ user, subjects, studyLogs, billingInfo 
                 <div className="space-y-2">
                   {getRecentActivity().map((log) => (
                     <div key={log.id} className="flex items-center gap-2 text-sm">
-                      <div className="w-2 h-2 rounded-full bg-primary" />
-                      <span className="text-muted-foreground">
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--primary)' }} />
+                      <span style={{ color: 'var(--muted-foreground)' }}>
                         {log.actionType.replace(/_/g, ' ').toLowerCase()}
                       </span>
                       {log.subject && (
-                        <span className="text-muted-foreground">in {log.subject.name}</span>
+                        <span style={{ color: 'var(--muted-foreground)' }}>in {log.subject.name}</span>
                       )}
-                      <span className="text-muted-foreground">
+                      <span style={{ color: 'var(--muted-foreground)' }}>
                         {new Date(log.timestamp).toLocaleDateString()}
                       </span>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-muted-foreground">No recent activity.</p>
+                <p style={{ color: 'var(--muted-foreground)' }}>No recent activity.</p>
               )}
             </CardContent>
           </Card>
@@ -597,10 +800,7 @@ export default function StudyDashboard({ user, subjects, studyLogs, billingInfo 
       {selectedSubjectForQuiz && (
         <SubjectQuizModal
           isOpen={showSubjectQuiz}
-          onClose={() => {
-            setShowSubjectQuiz(false);
-            setSelectedSubjectForQuiz(null);
-          }}
+          onClose={handleSubjectQuizClose}
           userId={user.id}
           subjectId={currentSubjects.find(s => s.name === selectedSubjectForQuiz.name)?.id || ""}
           subjectName={selectedSubjectForQuiz.name}
@@ -612,11 +812,7 @@ export default function StudyDashboard({ user, subjects, studyLogs, billingInfo 
       {selectedSubjectForAI && (
         <AIModal
           isOpen={showAIModal}
-          onClose={() => {
-            setShowAIModal(false);
-            setSelectedSubjectForAI(null);
-            setAiResult(null);
-          }}
+          onClose={handleAIModalClose}
           action={aiAction}
           noteContent={selectedSubjectForAI.notes.map(note => 
             `Note: ${note.title}\n${note.text}`

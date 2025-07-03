@@ -1,12 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUser } from '@/auth/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { checkUserUsageLimit, incrementUsage } from '@/actions/billing';
 
 export async function POST(request: NextRequest) {
   try {
     const user = await getUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Check usage limit first
+    const usageCheck = await checkUserUsageLimit(user.id);
+    if (!usageCheck.canGenerate) {
+      return NextResponse.json({ 
+        error: `Daily limit reached. You have ${usageCheck.remaining} generations remaining.`,
+        limitReached: true,
+        remaining: usageCheck.remaining
+      }, { status: 429 });
     }
 
     const { message, noteContent, noteTitle, action, conversationHistory } = await request.json();
@@ -43,11 +54,27 @@ Please provide a helpful, accurate response based on the study material provided
     const response = await result.response;
     const responseText = response.text();
 
+    // Increment usage count after successful generation
+    await incrementUsage(user.id);
+
     return NextResponse.json({
       success: true,
       response: responseText
     });
   } catch (error) {
+    console.error("AI Chat Error:", error);
+    
+    // Check if it's a usage limit error
+    if (error instanceof Error && error.message.includes("Daily limit reached")) {
+      return NextResponse.json(
+        { 
+          error: error.message,
+          limitReached: true
+        },
+        { status: 429 }
+      );
+    }
+    
     return NextResponse.json(
       { error: 'Failed to process request' },
       { status: 500 }

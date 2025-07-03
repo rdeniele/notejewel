@@ -29,6 +29,11 @@ export default function ConceptMapGenerator({ userId, subjectId, noteIds }: Conc
       const generatedMap = await generateConceptMap(userId, subjectId, noteIds);
       setConceptMap(generatedMap);
       toast.success("Concept map generated successfully!");
+      
+      // Refresh page to update AI generations count
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     } catch (error) {
       toast.error("Failed to generate concept map");
       console.error("Concept map generation error:", error);
