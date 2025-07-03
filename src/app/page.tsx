@@ -169,9 +169,9 @@ async function HomePage({searchParams}:Props){
         <div className="w-full bg-gradient-to-r from-primary to-primary/80 text-primary-foreground">
           <div className="max-w-7xl mx-auto px-4 py-2 text-center">
             <p className="text-sm font-medium">
-              📝 Simple AI Study Tools - Note Taking, Summaries & Quizzes Starting Free! 
+              🎉 Free Premium for 1 Month for First 100 Users! 
               <span className="ml-2 px-2 py-1 bg-white/20 rounded-full text-xs font-semibold">
-                Try Now
+                Limited Time
               </span>
             </p>
           </div>
