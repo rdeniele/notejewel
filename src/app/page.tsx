@@ -390,11 +390,11 @@ async function HomePage({searchParams}:Props){
                 <div className="bg-muted/30 border border-border rounded-2xl p-6">
                   <div className="flex items-center mb-4">
                     <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center mr-4">
-                      <span className="text-primary font-semibold">S</span>
+                      <span className="text-primary font-semibold">J</span>
                     </div>
                     <div>
-                      <h4 className="font-semibold text-foreground">Sarah M.</h4>
-                      <p className="text-sm text-muted-foreground">Medical Student</p>
+                      <h4 className="font-semibold text-foreground">J. V.</h4>
+                      <p className="text-sm text-muted-foreground">IT Student</p>
                     </div>
                   </div>
                   <p className="text-muted-foreground leading-relaxed">"NoteJewel has completely changed how I study. The AI insights help me understand complex topics better, and the study plans keep me on track."</p>
@@ -409,11 +409,11 @@ async function HomePage({searchParams}:Props){
                 <div className="bg-muted/30 border border-border rounded-2xl p-6">
                   <div className="flex items-center mb-4">
                     <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center mr-4">
-                      <span className="text-primary font-semibold">M</span>
+                      <span className="text-primary font-semibold">J</span>
                     </div>
                     <div>
-                      <h4 className="font-semibold text-foreground">Mike R.</h4>
-                      <p className="text-sm text-muted-foreground">Engineering Student</p>
+                      <h4 className="font-semibold text-foreground">J. T.</h4>
+                      <p className="text-sm text-muted-foreground">Psychology Student</p>
                     </div>
                   </div>
                   <p className="text-muted-foreground leading-relaxed">"The smart note organization and AI-powered study plans have made my exam preparation so much more effective. Highly recommended!"</p>
@@ -428,14 +428,14 @@ async function HomePage({searchParams}:Props){
                 <div className="bg-muted/30 border border-border rounded-2xl p-6">
                   <div className="flex items-center mb-4">
                     <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center mr-4">
-                      <span className="text-primary font-semibold">E</span>
+                      <span className="text-primary font-semibold">D</span>
                     </div>
                     <div>
-                      <h4 className="font-semibold text-foreground">Emma L.</h4>
-                      <p className="text-sm text-muted-foreground">Law Student</p>
+                      <h4 className="font-semibold text-foreground">D. P.</h4>
+                      <p className="text-sm text-muted-foreground">Biology Student</p>
                     </div>
                   </div>
-                  <p className="text-muted-foreground leading-relaxed">"I love how NoteJewel adapts to my learning style. The concept maps and quizzes have been invaluable for understanding complex legal concepts."</p>
+                  <p className="text-muted-foreground leading-relaxed">"I love how NoteJewel adapts to my learning style. The concept maps and quizzes have been invaluable for understanding complex biological concepts."</p>
                   <div className="flex mt-4">
                     {[...Array(5)].map((_, i) => (
                       <svg key={i} className="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20">

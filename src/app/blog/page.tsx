@@ -4,7 +4,7 @@ import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "NoteJewel Blog | Study Tips, AI Learning, and Productivity",
-  description: "Read the latest on AI-powered study, productivity, and learning science. Curated by NoteJewel with real research and actionable advice.",
+  description: "Read the latest on AI-powered study, productivity, and learning science. Curated content with evidence-based insights and actionable advice.",
   keywords: [
     "study tips",
     "AI learning",
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   ],
   openGraph: {
     title: "NoteJewel Blog | Study Tips, AI Learning, and Productivity",
-    description: "Read the latest on AI-powered study, productivity, and learning science. Curated by NoteJewel with real research and actionable advice.",
+    description: "Read the latest on AI-powered study, productivity, and learning science. Curated content with evidence-based insights and actionable advice.",
     url: "https://notejewel.vercel.app/blog",
     siteName: "NoteJewel",
     images: [
@@ -46,7 +46,7 @@ const blogs = [
   {
     slug: "blog1",
     title: "How AI is Revolutionizing Student Learning: A Comprehensive Analysis",
-    excerpt: "Discover how artificial intelligence is transforming education with 30-40% improvement in learning outcomes. Backed by rigorous research, real-world case studies, and practical implementation strategies for students and educators.",
+    excerpt: "Discover how artificial intelligence is transforming education with significant improvements in learning outcomes. Evidence-based insights from published research, real-world case studies, and practical implementation strategies for students and educators.",
     image: "https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=800&q=80",
     date: "2024-07-05",
     readTime: "12 min read",
@@ -88,10 +88,10 @@ export default function BlogPage() {
         </Link>
       </div>
 
-      <h1 className="text-4xl font-bold mb-8 text-center">NoteJewel Research Blog</h1>
+      <h1 className="text-4xl font-bold mb-8 text-center">NoteJewel Blog</h1>
       <p className="text-lg text-muted-foreground mb-12 text-center max-w-3xl mx-auto">
-        In-depth, research-backed articles on learning science, study techniques, and educational technology. 
-        Every article includes peer-reviewed references, practical implementation guides, and real-world case studies.
+        In-depth, evidence-based articles on learning science, study techniques, and educational technology. 
+        Every article compiles information from published research, practical implementation guides, and real-world case studies.
       </p>
       <div className="grid md:grid-cols-3 gap-8">
         {blogs.map((blog) => (
@@ -153,7 +153,7 @@ export default function BlogPage() {
             "@context": "https://schema.org",
             "@type": "Blog",
             "name": "NoteJewel Blog",
-            "description": "Actionable insights, research, and tips for smarter studying and learning.",
+            "description": "Actionable insights and tips for smarter studying and learning, compiled from educational research and evidence-based practices.",
             "url": "https://notejewel.vercel.app/blog",
             "blogPost": blogs.map(blog => ({
               "@type": "BlogPosting",

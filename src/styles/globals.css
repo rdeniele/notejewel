@@ -145,4 +145,47 @@
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: var(--accent);
   }
+
+  /* Blog specific styles for better readability */
+  .blog-content {
+    line-height: 1.8;
+  }
+
+  .blog-content p {
+    margin-bottom: 1.5rem;
+  }
+
+  .blog-content h2 {
+    margin-top: 3rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .blog-content h3 {
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+  }
+
+  .blog-content ul, .blog-content ol {
+    margin-bottom: 1.5rem;
+  }
+
+  .blog-content li {
+    margin-bottom: 0.5rem;
+  }
+
+  /* Enhance prose readability */
+  .prose-enhanced p {
+    margin-bottom: 1.5rem !important;
+    line-height: 1.75 !important;
+  }
+
+  .prose-enhanced h2 {
+    margin-top: 3rem !important;
+    margin-bottom: 1.5rem !important;
+  }
+
+  .prose-enhanced h3 {
+    margin-top: 2rem !important;
+    margin-bottom: 1rem !important;
+  }
 }
