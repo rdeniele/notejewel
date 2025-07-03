@@ -254,6 +254,144 @@ async function HomePage({searchParams}:Props){
                 No Credit Card
               </div>
             </div>
+
+            {/* Pricing Banner */}
+            <div className="mt-16 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 border border-primary/20 rounded-3xl p-8 relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-400/5 via-purple-400/5 to-blue-400/5 opacity-50"></div>
+              <div className="relative z-10">
+                <div className="text-center mb-8">
+                  <h2 className="text-3xl font-bold text-foreground mb-3">Simple, Transparent Pricing</h2>
+                  <p className="text-muted-foreground text-lg">Choose the plan that fits your learning needs</p>
+                </div>
+                
+                <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+                  {/* Free Plan */}
+                  <div className="bg-background/80 backdrop-blur-sm border border-border rounded-2xl p-6 relative">
+                    <div className="text-center mb-6">
+                      <h3 className="text-xl font-semibold text-foreground mb-2">Free</h3>
+                      <div className="text-3xl font-bold text-primary mb-1">$0</div>
+                      <p className="text-sm text-muted-foreground">per month</p>
+                    </div>
+                    <ul className="space-y-3 mb-6">
+                      <li className="flex items-center gap-2 text-sm">
+                        <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        5 AI generations per day
+                      </li>
+                      <li className="flex items-center gap-2 text-sm">
+                        <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Unlimited note creation
+                      </li>
+                      <li className="flex items-center gap-2 text-sm">
+                        <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Basic study dashboard
+                      </li>
+                      <li className="flex items-center gap-2 text-sm">
+                        <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Subject organization
+                      </li>
+                    </ul>
+                    <a href="/sign-up" className="w-full block text-center px-4 py-3 border border-primary text-primary rounded-lg font-medium hover:bg-primary/10 transition-all duration-200">
+                      Get Started Free
+                    </a>
+                  </div>
+
+                  {/* Basic Plan */}
+                  <div className="bg-background/80 backdrop-blur-sm border-2 border-primary rounded-2xl p-6 relative transform scale-105 shadow-lg">
+                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                      <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-semibold">
+                        Most Popular
+                      </span>
+                    </div>
+                    <div className="text-center mb-6">
+                      <h3 className="text-xl font-semibold text-foreground mb-2">Basic</h3>
+                      <div className="text-3xl font-bold text-primary mb-1">$1</div>
+                      <p className="text-sm text-muted-foreground">per month</p>
+                    </div>
+                    <ul className="space-y-3 mb-6">
+                      <li className="flex items-center gap-2 text-sm">
+                        <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        50 AI generations per day
+                      </li>
+                      <li className="flex items-center gap-2 text-sm">
+                        <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Everything in Free
+                      </li>
+                      <li className="flex items-center gap-2 text-sm">
+                        <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Advanced AI chat
+                      </li>
+                      <li className="flex items-center gap-2 text-sm">
+                        <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Study plan generation
+                      </li>
+                    </ul>
+                    <a href="/sign-up" className="w-full block text-center px-4 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-all duration-200">
+                      Start Basic Plan
+                    </a>
+                  </div>
+
+                  {/* Premium Plan */}
+                  <div className="bg-background/80 backdrop-blur-sm border border-border rounded-2xl p-6 relative">
+                    <div className="text-center mb-6">
+                      <h3 className="text-xl font-semibold text-foreground mb-2">Premium</h3>
+                      <div className="text-3xl font-bold text-primary mb-1">$4.99</div>
+                      <p className="text-sm text-muted-foreground">per month</p>
+                    </div>
+                    <ul className="space-y-3 mb-6">
+                      <li className="flex items-center gap-2 text-sm">
+                        <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Unlimited AI generations
+                      </li>
+                      <li className="flex items-center gap-2 text-sm">
+                        <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Everything in Basic
+                      </li>
+                      <li className="flex items-center gap-2 text-sm">
+                        <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Priority support
+                      </li>
+                      <li className="flex items-center gap-2 text-sm">
+                        <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Advanced analytics
+                      </li>
+                    </ul>
+                    <a href="/sign-up" className="w-full block text-center px-4 py-3 border border-primary text-primary rounded-lg font-medium hover:bg-primary/10 transition-all duration-200">
+                      Start Premium
+                    </a>
+                  </div>
+                </div>
+
+                <div className="text-center mt-8">
+                  <p className="text-sm text-muted-foreground">
+                    All plans include a 7-day free trial • Cancel anytime • No setup fees
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
