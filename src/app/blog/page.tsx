@@ -45,24 +45,30 @@ export const metadata: Metadata = {
 const blogs = [
   {
     slug: "blog1",
-    title: "How AI is Revolutionizing Student Learning",
-    excerpt: "Discover how artificial intelligence is transforming the way students learn, retain, and apply knowledge. Real-world examples and research included.",
+    title: "How AI is Revolutionizing Student Learning: A Comprehensive Analysis",
+    excerpt: "Discover how artificial intelligence is transforming education with 30-40% improvement in learning outcomes. Backed by rigorous research, real-world case studies, and practical implementation strategies for students and educators.",
     image: "https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=800&q=80",
     date: "2024-07-05",
+    readTime: "12 min read",
+    category: "AI & Education"
   },
   {
     slug: "blog2",
-    title: "5 Proven Study Techniques Backed by Science",
-    excerpt: "Explore evidence-based study methods that boost retention and performance. Learn what works, according to cognitive science.",
+    title: "5 Proven Study Techniques Backed by Science: Transform Your Learning",
+    excerpt: "Master evidence-based study methods that improve retention by 200-400%. Complete guide to spaced repetition, active recall, interleaving, elaboration, and dual coding with practical implementation strategies.",
     image: "https://images.unsplash.com/photo-1513258496099-48168024aec0?auto=format&fit=crop&w=800&q=80",
     date: "2024-07-04",
+    readTime: "15 min read",
+    category: "Study Methods"
   },
   {
     slug: "blog3",
-    title: "The Power of Spaced Repetition for Long-Term Memory",
-    excerpt: "Why do top students use spaced repetition? See the research and practical tips for using it in your own studies.",
+    title: "The Power of Spaced Repetition: Master Any Subject in Half the Time",
+    excerpt: "Uncover the neuroscience behind spaced repetition and why it increases retention by 200-300%. Complete guide from beginner to expert with tools, algorithms, and real success stories from medical students to polyglots.",
     image: "https://images.unsplash.com/photo-1503676382389-4809596d5290?auto=format&fit=crop&w=800&q=80",
     date: "2024-07-03",
+    readTime: "18 min read",
+    category: "Memory & Learning"
   },
 ];
 
@@ -82,9 +88,10 @@ export default function BlogPage() {
         </Link>
       </div>
 
-      <h1 className="text-4xl font-bold mb-8 text-center">NoteJewel Blog</h1>
-      <p className="text-lg text-muted-foreground mb-12 text-center max-w-2xl mx-auto">
-        Actionable insights, research, and tips for smarter studying and learning. Curated by the NoteJewel team.
+      <h1 className="text-4xl font-bold mb-8 text-center">NoteJewel Research Blog</h1>
+      <p className="text-lg text-muted-foreground mb-12 text-center max-w-3xl mx-auto">
+        In-depth, research-backed articles on learning science, study techniques, and educational technology. 
+        Every article includes peer-reviewed references, practical implementation guides, and real-world case studies.
       </p>
       <div className="grid md:grid-cols-3 gap-8">
         {blogs.map((blog) => (
@@ -100,11 +107,40 @@ export default function BlogPage() {
               />
             </Link>
             <div className="p-6 flex-1 flex flex-col">
-              <h2 className="text-xl font-semibold mb-2">
-                <Link href={`/blog/${blog.slug}`}>{blog.title}</Link>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-xs px-2 py-1 bg-primary/10 text-primary rounded-full font-medium">
+                  {blog.category}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {blog.readTime}
+                </span>
+              </div>
+              <h2 className="text-xl font-semibold mb-2 leading-tight">
+                <Link href={`/blog/${blog.slug}`} className="hover:text-primary transition-colors">
+                  {blog.title}
+                </Link>
               </h2>
-              <p className="text-muted-foreground mb-4 flex-1">{blog.excerpt}</p>
-              <Link href={`/blog/${blog.slug}`} className="text-primary font-medium hover:underline mt-auto">Read More →</Link>
+              <p className="text-muted-foreground mb-4 flex-1 text-sm leading-relaxed">
+                {blog.excerpt}
+              </p>
+              <div className="flex items-center justify-between mt-auto pt-4 border-t border-border">
+                <span className="text-xs text-muted-foreground">
+                  {new Date(blog.date).toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  })}
+                </span>
+                <Link 
+                  href={`/blog/${blog.slug}`} 
+                  className="text-primary font-medium hover:underline text-sm flex items-center gap-1"
+                >
+                  Read More 
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
+              </div>
             </div>
           </div>
         ))}
