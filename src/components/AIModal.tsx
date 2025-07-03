@@ -670,74 +670,16 @@ Make sure each question has exactly 4 options (A, B, C, D) and tests something s
           </DialogDescription>
         </DialogHeader>
         
-        <div className="flex flex-1 gap-4 min-h-0">
+        <div className="flex-1 min-h-0">
           {/* Main content area */}
-          <div className="flex-1 overflow-y-auto py-2">
-            {isLoading ? (
-              <div className="flex flex-col items-center justify-center gap-4 min-h-[200px]">
-                <Loader2 className="animate-spin size-8 text-primary" />
-                <div>Generating with AI...</div>
-              </div>
-            ) : action === "quiz" ? (
-              showQuizSetup ? renderQuizSetup() : renderQuiz()
-            ) : action === "studyPlan" ? (
-              <div className="w-full overflow-x-auto">
-                <div 
-                  className="study-plan-table"
-                  dangerouslySetInnerHTML={{ __html: aiResult || '' }}
-                />
-              </div>
-            ) : action === "conceptMap" ? (
-              <div className="space-y-6">
-                <Tabs defaultValue="visual" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="visual" className="flex items-center gap-2">
-                      <Eye className="size-4" />
-                      Visual Map
-                    </TabsTrigger>
-                    <TabsTrigger value="text" className="flex items-center gap-2">
-                      <List className="size-4" />
-                      Text Outline
-                    </TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="visual" className="space-y-4">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-lg">Interactive Concept Map</CardTitle>
-                        <CardDescription>
-                          Drag nodes to reorganize • Zoom and pan to explore • Click controls for options
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <VisualConceptMap conceptMapText={aiResult || ""} className="h-[600px]" />
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-                  
-                  <TabsContent value="text" className="space-y-4">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-lg">Concept Map Outline</CardTitle>
-                        <CardDescription>
-                          Hierarchical text representation of concepts and relationships
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="prose max-w-none whitespace-pre-wrap max-h-96 overflow-y-auto border rounded-lg p-4 bg-muted/20">
-                          {aiResult}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-                </Tabs>
-              </div>
-            ) : null}
-          </div>
-          
-          {/* Chat interface for summarize only */}
-          {action === "summarize" && !isLoading && (
-            <div className="w-80 border-l flex flex-col">
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center gap-4 min-h-[200px]">
+              <Loader2 className="animate-spin size-8 text-primary" />
+              <div>Generating with AI...</div>
+            </div>
+          ) : action === "summarize" ? (
+            /* Chat interface for summarize - full width */
+            <div className="flex flex-col h-full">
               <div className="p-4 border-b">
                 <h3 className="font-semibold flex items-center gap-2">
                   <MessageCircle className="size-4" />
@@ -810,7 +752,61 @@ Make sure each question has exactly 4 options (A, B, C, D) and tests something s
                 </div>
               </div>
             </div>
-          )}
+          ) : action === "quiz" ? (
+            showQuizSetup ? renderQuizSetup() : renderQuiz()
+          ) : action === "studyPlan" ? (
+            <div className="w-full overflow-x-auto py-2">
+              <div 
+                className="study-plan-table"
+                dangerouslySetInnerHTML={{ __html: aiResult || '' }}
+              />
+            </div>
+          ) : action === "conceptMap" ? (
+            <div className="space-y-6 py-2">
+              <Tabs defaultValue="visual" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="visual" className="flex items-center gap-2">
+                    <Eye className="size-4" />
+                    Visual Map
+                  </TabsTrigger>
+                  <TabsTrigger value="text" className="flex items-center gap-2">
+                    <List className="size-4" />
+                    Text Outline
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="visual" className="space-y-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">Interactive Concept Map</CardTitle>
+                      <CardDescription>
+                        Drag nodes to reorganize • Zoom and pan to explore • Click controls for options
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <VisualConceptMap conceptMapText={aiResult || ""} className="h-[600px]" />
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+                
+                <TabsContent value="text" className="space-y-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">Concept Map Outline</CardTitle>
+                      <CardDescription>
+                        Hierarchical text representation of concepts and relationships
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="prose max-w-none whitespace-pre-wrap max-h-96 overflow-y-auto border rounded-lg p-4 bg-muted/20">
+                        {aiResult}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
+            </div>
+          ) : null}
         </div>
         
         {/* Footer - only show for non-quiz actions or when quiz is not in progress */}
