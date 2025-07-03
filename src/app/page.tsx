@@ -5,6 +5,8 @@ import NotesPage from "@/components/NotesPage";
 import UserProfileSetupWrapper from "@/components/UserProfileSetupWrapper";
 import StudyDashboard from "@/components/StudyDashboard";
 import PricingPlans from "@/components/PricingPlans";
+import FloatingPomodoroTimer from "@/components/FloatingPomodoroTimer";
+import { PomodoroProvider } from "@/providers/PomodoroProvider";
 import { prisma } from "@/db/prisma";
 import { updateUserStreak } from "@/actions/users";
 import { getUserBillingInfo } from "@/actions/billing";
@@ -167,9 +169,9 @@ async function HomePage({searchParams}:Props){
         <div className="w-full bg-gradient-to-r from-primary to-primary/80 text-primary-foreground">
           <div className="max-w-7xl mx-auto px-4 py-2 text-center">
             <p className="text-sm font-medium">
-              🎉 Limited Time: First 100 users get 3 months of Premium FREE! 
+              📝 Simple AI Study Tools - Note Taking, Summaries & Quizzes Starting Free! 
               <span className="ml-2 px-2 py-1 bg-white/20 rounded-full text-xs font-semibold">
-                Join Now
+                Try Now
               </span>
             </p>
           </div>
@@ -205,16 +207,16 @@ async function HomePage({searchParams}:Props){
             {/* Stats */}
             <div className="flex flex-wrap justify-center gap-8 text-center">
               <div className="flex flex-col items-center">
-                <div className="text-3xl font-bold text-primary">10K+</div>
-                <div className="text-sm text-muted-foreground">Active Students</div>
+                <div className="text-3xl font-bold text-primary">AI-Powered</div>
+                <div className="text-sm text-muted-foreground">Note Summaries</div>
               </div>
               <div className="flex flex-col items-center">
-                <div className="text-3xl font-bold text-primary">50K+</div>
-                <div className="text-sm text-muted-foreground">Notes Created</div>
+                <div className="text-3xl font-bold text-primary">Smart</div>
+                <div className="text-sm text-muted-foreground">Quiz Generation</div>
               </div>
               <div className="flex flex-col items-center">
-                <div className="text-3xl font-bold text-primary">95%</div>
-                <div className="text-sm text-muted-foreground">Success Rate</div>
+                <div className="text-3xl font-bold text-primary">Easy</div>
+                <div className="text-sm text-muted-foreground">Organization</div>
               </div>
             </div>
 
@@ -237,19 +239,19 @@ async function HomePage({searchParams}:Props){
                 <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                Free to Start
+                Start Free
               </div>
               <div className="flex items-center gap-2">
                 <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                No Credit Card Required
+                Simple AI Tools
               </div>
               <div className="flex items-center gap-2">
                 <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                Instant Access
+                No Credit Card
               </div>
             </div>
           </div>
@@ -264,7 +266,7 @@ async function HomePage({searchParams}:Props){
                   </svg>
                 </div>
                 <h3 className="text-xl font-semibold text-foreground mb-3 text-center">Smart Notes</h3>
-                <p className="text-muted-foreground text-center leading-relaxed">Organize your thoughts with AI-powered note-taking and intelligent categorization. Create, edit, and organize notes with ease.</p>
+                <p className="text-muted-foreground text-center leading-relaxed">Create and organize your study notes with basic AI assistance. Simple, clean interface for note-taking.</p>
                 
                 {/* Feature Details */}
                 <div className="mt-6 space-y-3 text-sm text-muted-foreground">
@@ -272,19 +274,19 @@ async function HomePage({searchParams}:Props){
                     <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span>AI-powered organization</span>
+                    <span>Note creation & editing</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span>Smart categorization</span>
+                    <span>Subject organization</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span>Real-time collaboration</span>
+                    <span>AI summaries</span>
                   </div>
                 </div>
 
@@ -304,8 +306,8 @@ async function HomePage({searchParams}:Props){
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold text-foreground mb-3 text-center">Study Plans</h3>
-                <p className="text-muted-foreground text-center leading-relaxed">Generate personalized study plans tailored to your learning style and goals. Track progress and stay motivated.</p>
+                <h3 className="text-xl font-semibold text-foreground mb-3 text-center">AI Chat & Quizzes</h3>
+                <p className="text-muted-foreground text-center leading-relaxed">Get AI-generated quizzes from your notes and chat with AI about your study topics. Simple tools to test your knowledge.</p>
                 
                 {/* Feature Details */}
                 <div className="mt-6 space-y-3 text-sm text-muted-foreground">
@@ -313,25 +315,25 @@ async function HomePage({searchParams}:Props){
                     <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span>Personalized scheduling</span>
+                    <span>AI chat about notes</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span>Progress tracking</span>
+                    <span>Quiz generation</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span>Adaptive recommendations</span>
+                    <span>Study progress tracking</span>
                   </div>
                 </div>
 
                 <div className="mt-6 flex justify-center">
                   <a href="/sign-up" className="group/btn flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors duration-200 bg-primary/10 hover:bg-primary/20 px-4 py-2 rounded-lg">
-                    <span>Create Study Plan</span>
+                    <span>Try AI Chat</span>
                     <svg className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
@@ -345,8 +347,8 @@ async function HomePage({searchParams}:Props){
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold text-foreground mb-3 text-center">AI Insights</h3>
-                <p className="text-muted-foreground text-center leading-relaxed">Get intelligent insights, quizzes, and concept maps to enhance your understanding and retention.</p>
+                <h3 className="text-xl font-semibold text-foreground mb-3 text-center">Study Dashboard</h3>
+                <p className="text-muted-foreground text-center leading-relaxed">Track your study habits and organize your subjects. Simple dashboard to see your progress and manage your learning.</p>
                 
                 {/* Feature Details */}
                 <div className="mt-6 space-y-3 text-sm text-muted-foreground">
@@ -354,25 +356,25 @@ async function HomePage({searchParams}:Props){
                     <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span>Smart concept mapping</span>
+                    <span>Subject management</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span>Generated quizzes</span>
+                    <span>Study streak tracking</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span>Learning analytics</span>
+                    <span>Basic analytics</span>
                   </div>
                 </div>
 
                 <div className="mt-6 flex justify-center">
                   <a href="/sign-up" className="group/btn flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors duration-200 bg-primary/10 hover:bg-primary/20 px-4 py-2 rounded-lg">
-                    <span>Discover AI Features</span>
+                    <span>View Dashboard</span>
                     <svg className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
@@ -522,19 +524,19 @@ async function HomePage({searchParams}:Props){
 
             {/* Final CTA Section */}
             <div className="mt-24 bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-3xl p-12 text-center">
-              <h2 className="text-3xl font-bold text-foreground mb-4">Ready to Transform Your Learning?</h2>
+              <h2 className="text-3xl font-bold text-foreground mb-4">Ready to Organize Your Notes?</h2>
               <p className="text-muted-foreground text-lg mb-8 max-w-2xl mx-auto">
-                Join thousands of students who are already using NoteJewel to improve their study habits and achieve better results.
+                Start with simple note-taking and AI summaries. Create quizzes from your notes and track your study progress.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                 <a href="/sign-up" className="px-8 py-4 bg-primary text-primary-foreground rounded-lg text-lg font-semibold hover:bg-primary/90 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105">
-                  Get Started Free
+                  Start Taking Notes
                 </a>
                 <a href="/login" className="px-8 py-4 border border-border text-foreground rounded-lg text-lg font-medium hover:bg-muted/50 transition-all duration-200">
                   Sign In
                 </a>
               </div>
-              <p className="text-xs text-muted-foreground mt-4">No credit card required • Start learning in seconds</p>
+              <p className="text-xs text-muted-foreground mt-4">No credit card required • Basic features are free</p>
             </div>
 
             {/* Footer */}
@@ -781,31 +783,32 @@ async function HomePage({searchParams}:Props){
       planType: "FREE" as const,
       billingStatus: "PENDING" as const,
       dailyGenerationsUsed: 0,
-      remaining: 10,
-      limit: 10,
+      remaining: 5,
+      limit: 5,
       planEndDate: null,
       billingEmail: null,
     };
   }
 
   return (
-    <div className="flex h-full flex-col gap-4 sm:gap-6 p-3 sm:p-6">
-      <Tabs defaultValue="notes" className="w-full">
-        <div className="flex w-full max-w-7xl mx-auto flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0">
-          <div className="flex items-center gap-4">
-            <h2 className="text-xl sm:text-2xl font-semibold text-foreground/80">NoteJewel</h2>
-            <div className="hidden sm:block h-6 w-px bg-border" />
-            <p className="hidden sm:block text-sm text-muted-foreground">Your AI-Powered Study Assistant</p>
-          </div>
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="flex items-center gap-2 text-sm">
-              <span className="text-muted-foreground">Welcome back,</span>
-              <span className="font-medium text-foreground">
-                {userData.displayName || userData.email?.split('@')[0] || 'User'}!
-              </span>
+    <PomodoroProvider>
+      <div className="flex h-full flex-col gap-4 sm:gap-6 p-3 sm:p-6">
+        <Tabs defaultValue="notes" className="w-full">
+          <div className="flex w-full max-w-7xl mx-auto flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0">
+            <div className="flex items-center gap-4">
+              <h2 className="text-xl sm:text-2xl font-semibold text-foreground/80">NoteJewel</h2>
+              <div className="hidden sm:block h-6 w-px bg-border" />
+              <p className="hidden sm:block text-sm text-muted-foreground">Your AI-Powered Study Assistant</p>
+            </div>
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-muted-foreground">Welcome back,</span>
+                <span className="font-medium text-foreground">
+                  {userData.displayName || userData.email?.split('@')[0] || 'User'}!
+                </span>
+              </div>
             </div>
           </div>
-        </div>
 
         <TabsList className="grid w-full max-w-7xl mx-auto grid-cols-3 mt-6 bg-background/50 backdrop-blur-sm border border-border/50 shadow-sm hover:shadow-md transition-shadow duration-300 relative">
           <div className="absolute inset-0 bg-gradient-to-r from-amber-400/5 via-transparent to-transparent rounded-lg pointer-events-none"></div>
@@ -854,6 +857,7 @@ async function HomePage({searchParams}:Props){
               id: subject.id,
               name: subject.name
             })) || []}
+            billingInfo={billingInfo}
           />
           </div>
         </TabsContent>
@@ -914,7 +918,11 @@ async function HomePage({searchParams}:Props){
         currentDailyStudyTime={userData.dailyStudyTime}
         needsSetup={needsProfileSetup}
       />
-    </div>
+
+      {/* Floating Pomodoro Timer */}
+      <FloatingPomodoroTimer />
+      </div>
+    </PomodoroProvider>
   )
 }
 

@@ -114,6 +114,14 @@ export const askAIAboutNotesAction = async (
   const user = await getUser();
   if (!user) throw new Error("You must be logged in to ask AI questions");
 
+  // Check usage limit first
+  const { checkUserUsageLimit, incrementUsage } = await import("@/actions/billing");
+  const usageCheck = await checkUserUsageLimit(user.id);
+  
+  if (!usageCheck.canGenerate) {
+    throw new Error(`Daily limit reached. You have ${usageCheck.remaining} generations remaining.`);
+  }
+
   const notes = await prisma.note.findMany({
     where: { authorId: user.id },
     orderBy: { updatedAt: "desc" },
@@ -179,6 +187,9 @@ export const askAIAboutNotesAction = async (
       .replace(/^\s*<html>[\s\S]*?<body[^>]*>/i, '') 
       .replace(/<\/body>[\s\S]*?<\/html>\s*$/i, '')  
       .trim();
+    
+    // Increment usage count after successful generation
+    await incrementUsage(user.id);
     
     return responseText;
   } catch (error) {

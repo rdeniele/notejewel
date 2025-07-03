@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { updateUserStreak } from "@/actions/users";
 import { logStudyActivity } from "@/actions/study";
 import { grantBonusGenerations } from "@/actions/billing";
+import { usePomodoroTimer } from "@/providers/PomodoroProvider";
 import { toast } from "sonner";
 import { 
   Calendar, 
@@ -89,12 +90,22 @@ export default function StudyDashboard({ user, subjects, studyLogs, billingInfo 
   const [isAILoading, setIsAILoading] = useState(false);
   const [currentSubjects, setCurrentSubjects] = useState(subjects);
   
-  // Pomodoro Timer State
-  const [pomodoroTime, setPomodoroTime] = useState(25 * 60); // 25 minutes in seconds
-  const [isBreakTime, setIsBreakTime] = useState(false);
-  const [isTimerRunning, setIsTimerRunning] = useState(false);
-  const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout | null>(null);
+  // Study suggestions state
+  const [studySuggestions, setStudySuggestions] = useState<Array<{
+    type: string;
+    message: string;
+    action: string;
+    priority: number;
+    icon: string;
+    fallback?: boolean;
+  }>>([]);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(true);
+  
+  // ...existing code...
   const [currentStudyLogs, setCurrentStudyLogs] = useState(studyLogs);
+
+  // Get timer state from context
+  const { pomodoroTime, isBreakTime, isTimerRunning, startTimer, pauseTimer, resetTimer, formatTime } = usePomodoroTimer();
 
   useEffect(() => {
     // Update user streak on component mount (handle errors gracefully)
@@ -156,32 +167,87 @@ export default function StudyDashboard({ user, subjects, studyLogs, billingInfo 
     return currentStudyLogs.slice(0, 5);
   };
 
-  const getStudySuggestions = () => {
-    // Simple basic suggestion - no complex logic
-    if (currentSubjects.length === 0) {
-      return [];
-    }
-    
-    return [{
-      type: "info",
-      message: "Create notes and take quizzes to improve your learning. Stay consistent with daily study sessions.",
-      action: "Get started",
-      priority: 1,
-      icon: "💡"
-    }];
-  };
+  // Load study suggestions on component mount and when subjects change
+  useEffect(() => {
+    const loadSuggestions = async () => {
+      try {
+        setSuggestionsLoading(true);
+        const { generatePersonalizedStudyTip } = await import("@/actions/study");
+        
+        // Prepare subjects data for AI analysis
+        const subjectsData = currentSubjects.map(subject => ({
+          name: subject.name,
+          examDate: subject.examDate,
+          quizFrequency: subject.quizFrequency,
+          noteCount: subject.notes.length,
+          lastStudied: subject.notes.length > 0 ? subject.notes[0].createAt : undefined,
+        }));
+
+        const studyTipResult = await generatePersonalizedStudyTip(
+          user.id,
+          {
+            studyStyle: user.studyStyle,
+            dailyStudyTime: user.dailyStudyTime,
+            streakCount: user.streakCount,
+          },
+          subjectsData
+        );
+
+        if (studyTipResult.success) {
+          setStudySuggestions([{
+            type: "personalized",
+            message: studyTipResult.tip,
+            action: "Got it!",
+            priority: 1,
+            icon: studyTipResult.fallback ? "💡" : "🎯",
+            fallback: studyTipResult.fallback || false
+          }]);
+        } else {
+          throw new Error("Failed to generate tip");
+        }
+      } catch (error) {
+        console.error("Error generating personalized study tip:", error);
+        
+        // Fallback to basic suggestion if AI fails
+        if (currentSubjects.length === 0) {
+          setStudySuggestions([{
+            type: "info",
+            message: "Start by creating your first subject and adding some notes to get personalized study recommendations.",
+            action: "Get started",
+            priority: 1,
+            icon: "📚"
+          }]);
+        } else {
+          setStudySuggestions([{
+            type: "info",
+            message: "Create notes and take quizzes to improve your learning. Stay consistent with daily study sessions.",
+            action: "Continue",
+            priority: 1,
+            icon: "💡"
+          }]);
+        }
+      } finally {
+        setSuggestionsLoading(false);
+      }
+    };
+
+    loadSuggestions();
+  }, [currentSubjects, user.studyStyle, user.streakCount, user.id, user.dailyStudyTime]);
 
   const handleStudySuggestion = (suggestion: {
     type: string;
     message: string;
     action: string;
-    subjectId?: string;
     priority: number;
-    icon?: string;
+    icon: string;
+    fallback?: boolean;
   }) => {
-    // Simple basic action - just show a toast message
-    if (suggestion.action === "Get started") {
+    // Handle different suggestion actions
+    if (suggestion.action === "Got it!" || suggestion.action === "Continue") {
+      toast.success("Great! Keep up the good work with your studies!");
+    } else if (suggestion.action === "Get started") {
       toast.success("Start by creating subjects and notes to begin your study journey!");
+      setActiveTab("subjects"); // Switch to subjects tab
     }
   };
 
@@ -307,73 +373,6 @@ export default function StudyDashboard({ user, subjects, studyLogs, billingInfo 
     
     return `${hours}h ${minutes}m`;
   };
-
-  // Pomodoro Timer Functions
-  const startTimer = () => {
-    if (timerInterval) {
-      clearInterval(timerInterval);
-    }
-    
-    setIsTimerRunning(true);
-    const interval = setInterval(() => {
-      setPomodoroTime((prevTime) => {
-        if (prevTime <= 1) {
-          // Timer finished
-          clearInterval(interval);
-          setIsTimerRunning(false);
-          
-          if (isBreakTime) {
-            // Break finished, start work session
-            setIsBreakTime(false);
-            setPomodoroTime(25 * 60);
-            toast.success("Break time over! Ready for another focused session?");
-          } else {
-            // Work session finished, start break
-            setIsBreakTime(true);
-            setPomodoroTime(5 * 60);
-            toast.success("Great work! Time for a 5-minute break.");
-          }
-          return 0;
-        }
-        return prevTime - 1;
-      });
-    }, 1000);
-    
-    setTimerInterval(interval);
-  };
-
-  const pauseTimer = () => {
-    if (timerInterval) {
-      clearInterval(timerInterval);
-      setTimerInterval(null);
-    }
-    setIsTimerRunning(false);
-  };
-
-  const resetTimer = () => {
-    if (timerInterval) {
-      clearInterval(timerInterval);
-      setTimerInterval(null);
-    }
-    setIsTimerRunning(false);
-    setIsBreakTime(false);
-    setPomodoroTime(25 * 60);
-  };
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  // Cleanup timer on unmount
-  useEffect(() => {
-    return () => {
-      if (timerInterval) {
-        clearInterval(timerInterval);
-      }
-    };
-  }, [timerInterval]);
 
   return (
     <div className="space-y-6">
@@ -547,88 +546,57 @@ export default function StudyDashboard({ user, subjects, studyLogs, billingInfo 
         </Card>
       </div>
 
-      {/* Motivational Quote and Pomodoro Timer Row */}
-      <div className="grid gap-4 md:grid-cols-2">
-        {/* Motivational Quote */}
-        <Card style={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)' }}>
-          <CardContent className="p-4">
-            <div className="text-center">
-              <p className="italic font-medium" style={{ color: 'var(--muted-foreground)' }}>"{motivationalQuote}"</p>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Motivational Quote */}
+      <Card style={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)' }}>
+        <CardContent className="p-4">
+          <div className="text-center">
+            <p className="italic font-medium" style={{ color: 'var(--muted-foreground)' }}>"{motivationalQuote}"</p>
+          </div>
+        </CardContent>
+      </Card>
 
-        {/* Pomodoro Timer */}
-        <Card style={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)' }}>
-          <CardContent className="p-4">
-            <div className="text-center space-y-3">
-              <div className="flex items-center justify-center gap-2">
-                <Clock className="size-4" style={{ color: 'var(--primary)' }} />
-                <span className="text-sm font-medium" style={{ color: 'var(--card-foreground)' }}>
-                  {isBreakTime ? "Break Time" : "Focus Time"}
-                </span>
-              </div>
-              
-              <div className="text-3xl font-bold" style={{ 
-                color: isBreakTime ? 'var(--chart-2)' : 'var(--primary)' 
-              }}>
-                {formatTime(pomodoroTime)}
-              </div>
-              
-              <div className="flex justify-center gap-2">
-                <Button
-                  size="sm"
-                  variant={isTimerRunning ? "secondary" : "default"}
-                  onClick={isTimerRunning ? pauseTimer : startTimer}
-                  style={!isTimerRunning ? {
-                    backgroundColor: 'var(--primary)',
-                    color: 'var(--primary-foreground)'
-                  } : {}}
-                >
-                  {isTimerRunning ? "Pause" : "Start"}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={resetTimer}
-                  style={{ borderColor: 'var(--border)', color: 'var(--muted-foreground)' }}
-                >
-                  Reset
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Simple Study Tip */}
-      {getStudySuggestions().length > 0 && (
+      {/* Personalized Study Tip */}
+      {(studySuggestions.length > 0 || suggestionsLoading) && (
         <Card style={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)' }}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Sparkles className="size-5" style={{ color: 'var(--primary)' }} />
-              Study Tip
+              {suggestionsLoading ? "Generating Your Study Tip..." : "Personalized Study Tip"}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {getStudySuggestions().map((suggestion, index) => (
-              <div key={index} className="flex items-center justify-between p-3 rounded-lg" style={{ backgroundColor: 'var(--muted)' + '30' }}>
-                <div className="flex items-center gap-3">
-                  <div className="text-lg">{suggestion.icon}</div>
-                  <span className="text-sm" style={{ color: 'var(--card-foreground)' }}>
-                    {suggestion.message}
-                  </span>
-                </div>
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  style={{ borderColor: 'var(--primary)', color: 'var(--primary)' }}
-                  onClick={() => handleStudySuggestion(suggestion)}
-                >
-                  {suggestion.action}
-                </Button>
+            {suggestionsLoading ? (
+              <div className="flex items-center justify-center p-6">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                <span className="ml-3 text-sm text-muted-foreground">Creating a personalized tip just for you...</span>
               </div>
-            ))}
+            ) : (
+              studySuggestions.map((suggestion, index) => (
+                <div key={index} className="flex items-center justify-between p-3 rounded-lg" style={{ backgroundColor: 'var(--muted)' + '30' }}>
+                  <div className="flex items-center gap-3">
+                    <div className="text-lg">{suggestion.icon}</div>
+                    <div className="flex-1">
+                      <span className="text-sm" style={{ color: 'var(--card-foreground)' }}>
+                        {suggestion.message}
+                      </span>
+                      {suggestion.fallback && (
+                        <div className="text-xs text-muted-foreground mt-1">
+                          💡 Basic recommendation (AI tip generation unavailable)
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    style={{ borderColor: 'var(--primary)', color: 'var(--primary)' }}
+                    onClick={() => handleStudySuggestion(suggestion)}
+                  >
+                    {suggestion.action}
+                  </Button>
+                </div>
+              ))
+            )}
           </CardContent>
         </Card>
       )}
@@ -824,4 +792,4 @@ export default function StudyDashboard({ user, subjects, studyLogs, billingInfo 
       )}
     </div>
   );
-} 
+}

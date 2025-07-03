@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import gemini from "@/gemini";
 import NoteViewModal from "./NoteViewModal";
 import AIModal from "./AIModal";
+import { checkUserUsageLimit, incrementUsage } from "@/actions/billing";
 import "@/styles/study-plan.css";
 
 interface Note {
@@ -29,6 +30,19 @@ interface NotesCardGridProps {
   onNoteSelect: (noteId: string) => void;
   onNoteUpdate: (noteId: string, content: string, title?: string) => void;
   onNoteDelete?: (noteId: string) => void;
+  user?: {
+    id: string;
+    email?: string;
+  } | null;
+  billingInfo?: {
+    planType: "FREE" | "BASIC" | "PREMIUM";
+    billingStatus: "PENDING" | "ACTIVE" | "EXPIRED" | "CANCELLED";
+    dailyGenerationsUsed: number;
+    remaining: number;
+    limit: number;
+    planEndDate: Date | null;
+    billingEmail: string | null;
+  };
 }
 
 export default function NotesCardGrid({ 
@@ -36,7 +50,9 @@ export default function NotesCardGrid({
   selectedNoteId, 
   onNoteSelect, 
   onNoteUpdate,
-  onNoteDelete
+  onNoteDelete,
+  user,
+  billingInfo
 }: NotesCardGridProps) {
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
@@ -49,6 +65,39 @@ export default function NotesCardGrid({
   const [aiLoading, setAiLoading] = useState(false);
 
   const handleAIAction = async (note: Note, action: "summarize" | "quiz" | "studyPlan" | "conceptMap") => {
+    // Check if user is logged in
+    if (!user) {
+      toast.error("Please sign in to use AI features");
+      return;
+    }
+
+    // Check plan restrictions for advanced features
+    if (action === "studyPlan" || action === "conceptMap") {
+      if (billingInfo?.planType === "FREE") {
+        toast.error("Study plans and concept maps are available on Pro and Premium plans");
+        return;
+      }
+    }
+
+    // Check usage limits
+    try {
+      const usageCheck = await checkUserUsageLimit(user.id);
+      if (!usageCheck.canGenerate) {
+        if (billingInfo?.planType === "FREE") {
+          toast.error(`Daily limit reached (${billingInfo.limit} generations). Upgrade to Pro for 30 daily generations!`);
+        } else if (billingInfo?.planType === "BASIC") {
+          toast.error(`Daily limit reached (${billingInfo.limit} generations). Upgrade to Premium for unlimited access!`);
+        } else {
+          toast.error("Daily limit reached. Please try again tomorrow.");
+        }
+        return;
+      }
+    } catch (error) {
+      console.error("Error checking usage limit:", error);
+      toast.error("Unable to check usage limit. Please try again.");
+      return;
+    }
+
     setAiModalNote(note);
     setAiModalAction(action);
     setAiModalOpen(true);
@@ -128,7 +177,11 @@ Only return the HTML table, no additional text or formatting.`;
 
       if (result) {
         setAiResult(result);
-        toast.success(`${action.charAt(0).toUpperCase() + action.slice(1)} generated successfully!`);
+        // Increment usage count after successful generation
+        await incrementUsage(user.id);
+        toast.success(`AI ${action} generated successfully!`);
+      } else {
+        toast.error("Failed to generate AI response");
       }
     } catch (error) {
       toast.error(`Failed to generate ${action}`);
@@ -157,20 +210,92 @@ Only return the HTML table, no additional text or formatting.`;
 
   if (notes.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] text-center space-y-4">
-        <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center">
-          <FileText className="w-8 h-8 text-muted-foreground" />
+      <>
+        {/* Usage Indicator */}
+        {billingInfo && (
+          <div className="mb-4 p-3 bg-muted/30 border border-border rounded-lg">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">
+                AI Generations Today: {billingInfo.dailyGenerationsUsed} / {billingInfo.limit === Infinity ? "∞" : billingInfo.limit}
+              </span>
+              <div className="flex items-center gap-2">
+                <Badge variant={billingInfo.planType === "FREE" ? "secondary" : billingInfo.planType === "BASIC" ? "default" : "secondary"}>
+                  {billingInfo.planType === "FREE" ? "Free" : billingInfo.planType === "BASIC" ? "Pro" : "Premium"}
+                </Badge>
+                {billingInfo.planType === "FREE" && billingInfo.remaining <= 2 && (
+                  <span className="text-xs text-orange-600">Low limit - consider upgrading!</span>
+                )}
+              </div>
+            </div>
+            {billingInfo.limit !== Infinity && (
+              <div className="mt-2 w-full bg-secondary rounded-full h-2">
+                <div 
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    billingInfo.dailyGenerationsUsed / billingInfo.limit > 0.8 
+                      ? "bg-red-500" 
+                      : billingInfo.dailyGenerationsUsed / billingInfo.limit > 0.6 
+                      ? "bg-orange-500" 
+                      : "bg-green-500"
+                  }`}
+                  style={{ 
+                    width: `${Math.min((billingInfo.dailyGenerationsUsed / billingInfo.limit) * 100, 100)}%` 
+                  }}
+                />
+              </div>
+            )}
+          </div>
+        )}
+        
+        <div className="flex flex-col items-center justify-center min-h-[400px] text-center space-y-4">
+          <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center">
+            <FileText className="w-8 h-8 text-muted-foreground" />
+          </div>
+          <div>
+            <h3 className="text-lg font-medium">No notes yet</h3>
+            <p className="text-muted-foreground">Create your first note to get started</p>
+          </div>
         </div>
-        <div>
-          <h3 className="text-lg font-medium">No notes yet</h3>
-          <p className="text-muted-foreground">Create your first note to get started</p>
-        </div>
-      </div>
+      </>
     );
   }
 
   return (
     <>
+      {/* Usage Indicator */}
+      {billingInfo && (
+        <div className="mb-4 p-3 bg-muted/30 border border-border rounded-lg">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">
+              AI Generations Today: {billingInfo.dailyGenerationsUsed} / {billingInfo.limit === Infinity ? "∞" : billingInfo.limit}
+            </span>
+            <div className="flex items-center gap-2">
+              <Badge variant={billingInfo.planType === "FREE" ? "secondary" : billingInfo.planType === "BASIC" ? "default" : "secondary"}>
+                {billingInfo.planType === "FREE" ? "Free" : billingInfo.planType === "BASIC" ? "Pro" : "Premium"}
+              </Badge>
+              {billingInfo.planType === "FREE" && billingInfo.remaining <= 2 && (
+                <span className="text-xs text-orange-600">Low limit - consider upgrading!</span>
+              )}
+            </div>
+          </div>
+          {billingInfo.limit !== Infinity && (
+            <div className="mt-2 w-full bg-secondary rounded-full h-2">
+              <div 
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  billingInfo.dailyGenerationsUsed / billingInfo.limit > 0.8 
+                    ? "bg-red-500" 
+                    : billingInfo.dailyGenerationsUsed / billingInfo.limit > 0.6 
+                    ? "bg-orange-500" 
+                    : "bg-green-500"
+                }`}
+                style={{ 
+                  width: `${Math.min((billingInfo.dailyGenerationsUsed / billingInfo.limit) * 100, 100)}%` 
+                }}
+              />
+            </div>
+          )}
+        </div>
+      )}
+      
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
         {notes.map((note) => {
           const isSelected = selectedNoteId === note.id;
@@ -273,8 +398,9 @@ Only return the HTML table, no additional text or formatting.`;
                       e.stopPropagation();
                       handleAIAction(note, 'studyPlan');
                     }}
-                    disabled={aiLoading && aiModalNote?.id === note.id}
-                    className="text-xs h-8"
+                    disabled={aiLoading && aiModalNote?.id === note.id || billingInfo?.planType === "FREE"}
+                    className={`text-xs h-8 ${billingInfo?.planType === "FREE" ? "opacity-50" : ""}`}
+                    title={billingInfo?.planType === "FREE" ? "Upgrade to Pro to unlock Study Plans" : "Generate AI Study Plan"}
                   >
                     {aiLoading && aiModalNote?.id === note.id && aiModalAction === 'studyPlan' ? (
                       <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
@@ -282,6 +408,9 @@ Only return the HTML table, no additional text or formatting.`;
                       <Target className="w-3 h-3 mr-1" />
                     )}
                     Study Plan
+                    {billingInfo?.planType === "FREE" && (
+                      <span className="ml-1 text-xs">🔒</span>
+                    )}
                   </Button>
                   
                   <Button
@@ -291,8 +420,9 @@ Only return the HTML table, no additional text or formatting.`;
                       e.stopPropagation();
                       handleAIAction(note, 'conceptMap');
                     }}
-                    disabled={aiLoading && aiModalNote?.id === note.id}
-                    className="text-xs h-8"
+                    disabled={aiLoading && aiModalNote?.id === note.id || billingInfo?.planType === "FREE"}
+                    className={`text-xs h-8 ${billingInfo?.planType === "FREE" ? "opacity-50" : ""}`}
+                    title={billingInfo?.planType === "FREE" ? "Upgrade to Pro to unlock Concept Maps" : "Generate AI Concept Map"}
                   >
                     {aiLoading && aiModalNote?.id === note.id && aiModalAction === 'conceptMap' ? (
                       <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
@@ -300,6 +430,9 @@ Only return the HTML table, no additional text or formatting.`;
                       <Network className="w-3 h-3 mr-1" />
                     )}
                     Concept Map
+                    {billingInfo?.planType === "FREE" && (
+                      <span className="ml-1 text-xs">🔒</span>
+                    )}
                   </Button>
                 </div>
               </CardContent>

@@ -35,6 +35,15 @@ interface NotesPageProps {
   selectedNoteText?: string;
   user: AuthUser | null;
   subjects: Subject[];
+  billingInfo?: {
+    planType: "FREE" | "BASIC" | "PREMIUM";
+    billingStatus: "PENDING" | "ACTIVE" | "EXPIRED" | "CANCELLED";
+    dailyGenerationsUsed: number;
+    remaining: number;
+    limit: number;
+    planEndDate: Date | null;
+    billingEmail: string | null;
+  };
 }
 
 export default function NotesPage({ 
@@ -42,7 +51,8 @@ export default function NotesPage({
   selectedNoteId, 
   selectedNoteText = "",
   user,
-  subjects
+  subjects,
+  billingInfo
 }: NotesPageProps) {
   const router = useRouter();
 
@@ -134,6 +144,8 @@ export default function NotesPage({
           onNoteSelect={handleNoteSelect}
           onNoteUpdate={handleNoteUpdate}
           onNoteDelete={handleNoteDelete}
+          user={user}
+          billingInfo={billingInfo}
         />
       </div>
 

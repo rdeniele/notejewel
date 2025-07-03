@@ -213,8 +213,8 @@ export async function getUserBillingInfo(userId: string) {
       planType: "FREE" as const,
       billingStatus: "PENDING" as const,
       dailyGenerationsUsed: 0,
-      remaining: 10,
-      limit: 10,
+      remaining: 5,
+      limit: 5,
       planEndDate: null,
       billingEmail: null,
     };
@@ -224,13 +224,13 @@ export async function getUserBillingInfo(userId: string) {
 function getPlanLimit(planType: "FREE" | "BASIC" | "PREMIUM"): number {
   switch (planType) {
     case "FREE":
-      return 10;
+      return 5;
     case "BASIC":
-      return 100;
+      return 30;
     case "PREMIUM":
       return Infinity;
     default:
-      return 10;
+      return 5;
   }
 }
 
@@ -241,7 +241,7 @@ export async function getPlanPrice(planType: "FREE" | "BASIC" | "PREMIUM"): Prom
     case "BASIC":
       return "$1";
     case "PREMIUM":
-      return "$5";
+      return "$4.99";
     default:
       return "$0";
   }
@@ -297,5 +297,176 @@ export async function grantBonusGenerations(userId: string, bonusAmount: number 
   } catch (error) {
     console.error("Error granting bonus generations:", error);
     throw new Error("Failed to grant bonus generations");
+  }
+}
+
+// Admin-only functions for plan management
+export async function getAllUsers() {
+  try {
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        displayName: true,
+        planType: true,
+        billingStatus: true,
+        planStartDate: true,
+        planEndDate: true,
+        dailyGenerationsUsed: true,
+        lastGenerationReset: true,
+        createAt: true,
+        role: true,
+      },
+      orderBy: {
+        createAt: 'desc'
+      }
+    });
+
+    return users;
+  } catch (error) {
+    console.error("Error fetching all users:", error);
+    throw new Error("Failed to fetch users");
+  }
+}
+
+export async function updateUserPlan(
+  userId: string, 
+  planType: "FREE" | "BASIC" | "PREMIUM",
+  durationMonths: number = 1
+) {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const now = new Date();
+    const planEndDate = new Date(now);
+    planEndDate.setMonth(planEndDate.getMonth() + durationMonths);
+
+    const billingStatus = planType === "FREE" ? "PENDING" : "ACTIVE";
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        planType,
+        billingStatus,
+        planStartDate: now,
+        planEndDate: planType === "FREE" ? null : planEndDate,
+        // Reset usage when changing plans
+        dailyGenerationsUsed: 0,
+        lastGenerationReset: now,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any,
+    });
+
+    // Log the admin action
+    await prisma.usageLog.create({
+      data: {
+        userId,
+        actionType: `ADMIN_PLAN_CHANGE_${planType}`,
+      },
+    });
+
+    revalidatePath("/admin");
+    
+    return {
+      success: true,
+      message: `User plan updated to ${planType} successfully`,
+    };
+  } catch (error) {
+    console.error("Error updating user plan:", error);
+    throw new Error("Failed to update user plan");
+  }
+}
+
+export async function resetUserUsage(userId: string) {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const now = new Date();
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        dailyGenerationsUsed: 0,
+        lastGenerationReset: now,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any,
+    });
+
+    // Log the admin action
+    await prisma.usageLog.create({
+      data: {
+        userId,
+        actionType: "ADMIN_USAGE_RESET",
+      },
+    });
+
+    revalidatePath("/admin");
+    
+    return {
+      success: true,
+      message: "User usage reset successfully",
+    };
+  } catch (error) {
+    console.error("Error resetting user usage:", error);
+    throw new Error("Failed to reset user usage");
+  }
+}
+
+export async function extendUserPlan(userId: string, additionalMonths: number = 1) {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    if (user.planType === "FREE") {
+      throw new Error("Cannot extend free plan. Upgrade to a paid plan first.");
+    }
+
+    const currentEndDate = user.planEndDate || new Date();
+    const newEndDate = new Date(currentEndDate);
+    newEndDate.setMonth(newEndDate.getMonth() + additionalMonths);
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        planEndDate: newEndDate,
+        billingStatus: "ACTIVE", // Ensure status is active when extending
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any,
+    });
+
+    // Log the admin action
+    await prisma.usageLog.create({
+      data: {
+        userId,
+        actionType: `ADMIN_PLAN_EXTENSION_${additionalMonths}M`,
+      },
+    });
+
+    revalidatePath("/admin");
+    
+    return {
+      success: true,
+      message: `User plan extended by ${additionalMonths} months successfully`,
+    };
+  } catch (error) {
+    console.error("Error extending user plan:", error);
+    throw new Error("Failed to extend user plan");
   }
 }

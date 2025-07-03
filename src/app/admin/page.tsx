@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Mail, Clock, CheckCircle, XCircle, DollarSign, User, Calendar, Shield } from "lucide-react";
 import AdminBillingManager from "@/components/AdminBillingManager";
 import AdminUserManager from "@/components/AdminUserManager";
+import AdminPlanManager from "@/components/AdminPlanManager";
 import { requireAdmin } from "@/auth/server";
 import { redirect } from "next/navigation";
 
@@ -36,7 +37,7 @@ export default async function AdminPage() {
               Admin Only
             </Badge>
           </div>
-          <p className="text-muted-foreground">Manage billing requests and user plans</p>
+          <p className="text-muted-foreground">Manage billing requests, user plans, and admin privileges</p>
         </div>
       </div>
 
@@ -85,6 +86,9 @@ export default async function AdminPage() {
 
       {/* Billing Requests Manager */}
       <AdminBillingManager initialRequests={billingRequests} />
+
+      {/* User Plan Management */}
+      <AdminPlanManager />
 
       {/* Admin User Management */}
       <AdminUserManager />

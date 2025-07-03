@@ -74,9 +74,45 @@ Please provide a helpful, accurate response based on the study material provided
         { status: 429 }
       );
     }
+
+    // Check for Gemini API quota errors
+    if (error instanceof Error) {
+      // Quota exceeded error (429)
+      if (error.message.includes("429") || error.message.includes("quota") || error.message.includes("rate limit")) {
+        return NextResponse.json(
+          { 
+            error: "AI service is currently at capacity. The free tier daily quota has been exceeded. Please try again tomorrow or consider upgrading to a premium plan.",
+            quotaExceeded: true
+          },
+          { status: 429 }
+        );
+      }
+
+      // API key issues
+      if (error.message.includes("403") || error.message.includes("API key")) {
+        return NextResponse.json(
+          { 
+            error: "AI service configuration error. Please contact support.",
+            configError: true
+          },
+          { status: 500 }
+        );
+      }
+
+      // General API errors
+      if (error.message.includes("400") || error.message.includes("invalid")) {
+        return NextResponse.json(
+          { 
+            error: "Invalid request to AI service. Please try rephrasing your question.",
+            invalidRequest: true
+          },
+          { status: 400 }
+        );
+      }
+    }
     
     return NextResponse.json(
-      { error: 'Failed to process request' },
+      { error: 'Failed to process AI request. Please try again later.' },
       { status: 500 }
     );
   }

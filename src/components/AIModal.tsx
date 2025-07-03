@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -60,9 +60,17 @@ export default function AIModal({
   }>>([]);
   const [chatInput, setChatInput] = useState("");
   const [isChatLoading, setIsChatLoading] = useState(false);
+  
+  // Ref for auto-scrolling
+  const chatMessagesEndRef = useRef<HTMLDivElement>(null);
 
   // Add error state for quiz generation
   const [quizError, setQuizError] = useState<string | null>(null);
+
+  // Auto-scroll to bottom when new messages are added
+  useEffect(() => {
+    chatMessagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatMessages]);
 
   // Reset quiz setup when modal opens
   useEffect(() => {
@@ -382,7 +390,19 @@ Make sure each question has exactly 4 options (A, B, C, D) and tests something s
       const data = await response.json();
       
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to get AI response');
+        // Handle specific error types with user-friendly messages
+        if (data.quotaExceeded) {
+          toast.error('AI service daily quota exceeded. Please try again tomorrow or consider upgrading to premium.');
+        } else if (data.limitReached) {
+          toast.error(data.error || 'Daily usage limit reached.');
+        } else if (data.configError) {
+          toast.error('AI service temporarily unavailable. Please contact support.');
+        } else if (data.invalidRequest) {
+          toast.error('Invalid request. Please try rephrasing your question.');
+        } else {
+          toast.error(data.error || 'Failed to get AI response');
+        }
+        return;
       }
       
       setChatMessages(prev => [...prev, {
@@ -391,8 +411,16 @@ Make sure each question has exactly 4 options (A, B, C, D) and tests something s
         timestamp: new Date()
       }]);
     } catch (error) {
-      toast.error('Failed to get AI response');
       console.error('Chat error:', error);
+      
+      // Handle different types of client-side errors
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        toast.error('Network error. Please check your internet connection and try again.');
+      } else if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error('An unexpected error occurred. Please try again.');
+      }
     } finally {
       setIsChatLoading(false);
     }
@@ -655,9 +683,9 @@ Make sure each question has exactly 4 options (A, B, C, D) and tests something s
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-7xl max-h-[95vh] overflow-hidden flex flex-col"
+      <DialogContent className="max-w-7xl h-[90vh] overflow-hidden flex flex-col"
         style={{ width: '90vw' }}>
-        <DialogHeader>
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2 text-xl">
             {getIcon()}
             {action === "summarize" && "Summary"}
@@ -670,7 +698,7 @@ Make sure each question has exactly 4 options (A, B, C, D) and tests something s
           </DialogDescription>
         </DialogHeader>
         
-        <div className="flex-1 min-h-0">
+        <div className="flex-1 min-h-0 overflow-hidden">
           {/* Main content area */}
           {isLoading ? (
             <div className="flex flex-col items-center justify-center gap-4 min-h-[200px]">
@@ -680,7 +708,7 @@ Make sure each question has exactly 4 options (A, B, C, D) and tests something s
           ) : action === "summarize" ? (
             /* Chat interface for summarize - full width */
             <div className="flex flex-col h-full">
-              <div className="p-4 border-b">
+              <div className="p-4 border-b bg-muted/30 flex-shrink-0">
                 <h3 className="font-semibold flex items-center gap-2">
                   <MessageCircle className="size-4" />
                   Summary & Chat
@@ -690,49 +718,58 @@ Make sure each question has exactly 4 options (A, B, C, D) and tests something s
                 </p>
               </div>
               
-              {/* Chat messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {chatMessages.length === 0 ? (
-                  <div className="text-center text-muted-foreground text-sm">
-                    <MessageCircle className="size-8 mx-auto mb-2 opacity-50" />
-                    <p>Start a conversation about your note</p>
-                  </div>
-                ) : (
-                  chatMessages.map((message, index) => (
-                    <div
-                      key={index}
-                      className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                    >
-                      <div
-                        className={`max-w-[80%] rounded-lg p-3 ${
-                          message.role === 'user'
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted'
-                        }`}
-                      >
-                        <div className="text-sm whitespace-pre-wrap">{message.content}</div>
-                        <div className="text-xs opacity-70 mt-1">
-                          {message.timestamp.toLocaleTimeString()}
+              {/* Chat messages with proper scrolling */}
+              <div className="flex-1 overflow-y-auto min-h-0">
+                <div className="p-4 space-y-4 pb-8">
+                  {chatMessages.length === 0 ? (
+                    <div className="text-center text-muted-foreground text-sm py-8">
+                      <MessageCircle className="size-8 mx-auto mb-2 opacity-50" />
+                      <p>Start a conversation about your note</p>
+                    </div>
+                  ) : (
+                    <>
+                      {chatMessages.map((message, index) => (
+                        <div
+                          key={index}
+                          className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} mb-4`}
+                        >
+                          <div
+                            className={`max-w-[85%] rounded-lg p-3 break-words shadow-sm ${
+                              message.role === 'user'
+                                ? 'bg-primary text-primary-foreground'
+                                : 'bg-muted border'
+                            }`}
+                          >
+                            <div className="text-sm whitespace-pre-wrap break-words overflow-wrap-anywhere leading-relaxed">
+                              {message.content}
+                            </div>
+                            <div className="text-xs opacity-70 mt-2">
+                              {message.timestamp.toLocaleTimeString()}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </>
+                  )}
+                  
+                  {isChatLoading && (
+                    <div className="flex justify-start mb-4">
+                      <div className="bg-muted rounded-lg p-3 border shadow-sm">
+                        <div className="flex items-center gap-2">
+                          <Loader2 className="animate-spin size-4" />
+                          <span className="text-sm">AI is thinking...</span>
                         </div>
                       </div>
                     </div>
-                  ))
-                )}
-                
-                {isChatLoading && (
-                  <div className="flex justify-start">
-                    <div className="bg-muted rounded-lg p-3">
-                      <div className="flex items-center gap-2">
-                        <Loader2 className="animate-spin size-4" />
-                        <span className="text-sm">AI is thinking...</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                  )}
+                  
+                  {/* Auto-scroll reference */}
+                  <div ref={chatMessagesEndRef} />
+                </div>
               </div>
               
-              {/* Chat input */}
-              <div className="p-4 border-t">
+              {/* Chat input - ensure it's always visible */}
+              <div className="p-4 border-t bg-background flex-shrink-0">
                 <div className="flex gap-2">
                   <Input
                     value={chatInput}

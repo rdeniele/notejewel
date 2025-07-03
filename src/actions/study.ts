@@ -361,4 +361,104 @@ export async function logStudyActivity(
   } catch (error) {
     console.error("Error logging study activity:", error);
   }
-} 
+}
+
+// Personalized study tip generation using AI
+export async function generatePersonalizedStudyTip(
+  userId: string,
+  userProfile: {
+    studyStyle: "VISUAL" | "READING" | "PRACTICE" | "TEACHING" | "AUDIO";
+    dailyStudyTime: number;
+    streakCount: number;
+  },
+  subjects: Array<{
+    name: string;
+    examDate: Date | null;
+    quizFrequency: number;
+    noteCount: number;
+    lastStudied?: Date;
+  }>
+) {
+  try {
+    // Analyze user's study pattern
+    const totalNotes = subjects.reduce((sum, subject) => sum + subject.noteCount, 0);
+    const upcomingExams = subjects.filter(s => {
+      if (!s.examDate) return false;
+      const daysUntilExam = Math.ceil((new Date(s.examDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+      return daysUntilExam > 0 && daysUntilExam <= 30;
+    });
+    
+    const currentDate = new Date();
+    const dayOfWeek = currentDate.toLocaleDateString('en-US', { weekday: 'long' });
+    const timeOfDay = currentDate.getHours() < 12 ? 'morning' : currentDate.getHours() < 18 ? 'afternoon' : 'evening';
+
+    const prompt = `You are a personalized study coach. Based on the student's profile and current situation, provide ONE specific, actionable study tip.
+
+Student Profile:
+- Study Style: ${userProfile.studyStyle}
+- Daily Study Goal: ${userProfile.dailyStudyTime} minutes
+- Current Streak: ${userProfile.streakCount} days
+- Total Notes: ${totalNotes}
+- Current Day: ${dayOfWeek} ${timeOfDay}
+
+Subjects (${subjects.length} total):
+${subjects.map(s => {
+  const daysUntilExam = s.examDate ? Math.ceil((new Date(s.examDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : null;
+  return `- ${s.name}: ${s.noteCount} notes, ${daysUntilExam ? `exam in ${daysUntilExam} days` : 'no exam set'}, quiz frequency: every ${s.quizFrequency} days`;
+}).join('\n')}
+
+Upcoming Exams: ${upcomingExams.length > 0 ? upcomingExams.map(e => `${e.name} in ${Math.ceil((new Date(e.examDate!).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days`).join(', ') : 'None'}
+
+Requirements:
+- Provide ONLY ONE tip, maximum 2 sentences
+- Make it specific to their study style and current situation
+- Focus on immediate actionable advice
+- Consider their streak, upcoming exams, and note-taking patterns
+- Be encouraging but practical
+- Don't use asterisks or markdown formatting
+
+Examples of good tips:
+- "Since you're a visual learner with 3 upcoming exams, try creating a color-coded timeline this evening to map out your review schedule."
+- "With your 7-day streak and audio learning style, record yourself summarizing your Mathematics notes during your 60-minute study session today."
+- "Given your practice-focused approach and the Chemistry exam in 5 days, dedicate 30 minutes today to solving past problems rather than re-reading notes."
+
+Generate one personalized tip now:`;
+
+    const model = gemini.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const tip = response.text();
+
+    // Log the tip generation for analytics
+    await prisma.usageLog.create({
+      data: {
+        userId,
+        actionType: "STUDY_TIP_GENERATED",
+      },
+    });
+
+    return {
+      success: true,
+      tip: tip.trim(),
+      generated: new Date(),
+    };
+  } catch (error) {
+    console.error("Error generating study tip:", error);
+    
+    // Fallback to a basic tip based on profile
+    const fallbackTips = {
+      VISUAL: "Create a visual mind map of your most challenging subject to better organize your thoughts and improve retention.",
+      READING: "Set aside 15 minutes today to summarize your most recent notes in your own words to reinforce learning.",
+      PRACTICE: "Choose your weakest subject and spend 20 minutes doing practice problems or creating flashcards today.",
+      TEACHING: "Pick one concept from today's notes and explain it out loud as if teaching someone else.",
+      AUDIO: "Record yourself reading your key notes aloud and listen back during breaks or commute time."
+    };
+    
+    return {
+      success: true,
+      tip: fallbackTips[userProfile.studyStyle] || "Take a 5-minute break between study sessions to help your brain process and retain information better.",
+      generated: new Date(),
+      fallback: true,
+    };
+  }
+}
