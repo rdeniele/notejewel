@@ -6,10 +6,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { updateBillingRequestStatus } from "@/actions/billing";
 import { toast } from "sonner";
-import { Mail, Clock, CheckCircle, XCircle, DollarSign, User, Calendar } from "lucide-react";
+import { Mail, Clock, CheckCircle, XCircle, DollarSign, User, Calendar, Shield } from "lucide-react";
 import AdminBillingManager from "@/components/AdminBillingManager";
+import AdminUserManager from "@/components/AdminUserManager";
+import { requireAdmin } from "@/auth/server";
+import { redirect } from "next/navigation";
 
 export default async function AdminPage() {
+  try {
+    await requireAdmin();
+  } catch (error) {
+    redirect("/");
+  }
+
   const billingRequests = await getBillingRequests();
 
   const pendingRequests = billingRequests.filter(req => req.status === "PENDING");
@@ -20,7 +29,13 @@ export default async function AdminPage() {
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+            <Badge variant="destructive" className="flex items-center gap-1">
+              <Shield className="h-3 w-3" />
+              Admin Only
+            </Badge>
+          </div>
           <p className="text-muted-foreground">Manage billing requests and user plans</p>
         </div>
       </div>
@@ -70,6 +85,9 @@ export default async function AdminPage() {
 
       {/* Billing Requests Manager */}
       <AdminBillingManager initialRequests={billingRequests} />
+
+      {/* Admin User Management */}
+      <AdminUserManager />
     </div>
   );
 } 

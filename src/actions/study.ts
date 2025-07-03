@@ -245,24 +245,46 @@ export async function generateConceptMap(
       notesContent = subject.notes.map(note => note.text).join("\n\n");
     }
 
-    const prompt = `Create a concept map based on the following study material:
+    const prompt = `Create a comprehensive concept map based on the following study material. Extract the key concepts and organize them into a clear hierarchical structure that shows relationships between ideas.
 
+STUDY MATERIAL:
 ${notesContent}
 
-Organize the key concepts and their relationships in a hierarchical structure. Use bullet points and indentation to show relationships.
+INSTRUCTIONS:
+- Identify 3-7 main concepts from the material
+- For each main concept, identify 2-5 sub-concepts that relate to it
+- For important sub-concepts, add 1-3 specific details, examples, or related terms
+- Use descriptive concept names that include important keywords
+- Include concepts that might relate to each other across different branches
+- Use EXACTLY this format with proper indentation:
 
-Format as a structured outline with main concepts, sub-concepts, and their connections. Focus on the most important ideas and how they relate to each other.
+• [Main Concept 1 - use descriptive terms]
+  - [Sub-concept 1.1 - related process/method]
+    * [Specific detail or example]
+    * [Another related detail]
+  - [Sub-concept 1.2 - outcome/result]
+    * [Specific application]
+• [Main Concept 2 - another key area]
+  - [Sub-concept 2.1 - component/element]
+    * [Detail that might relate to other concepts]
+  - [Sub-concept 2.2 - related system/framework]
 
-Example format:
-• Main Concept 1
-  - Sub-concept 1.1
-    * Related detail
-  - Sub-concept 1.2
-• Main Concept 2
-  - Sub-concept 2.1
-    * Related detail
+RELATIONSHIP GUIDELINES:
+- Include concepts that show cause-effect relationships
+- Add concepts that demonstrate part-whole relationships  
+- Use terms that might connect across different main concepts
+- Include action words (process, method, technique) and object words (data, result, outcome)
+- Mention related terms that could link different areas
 
-Make it clear and easy to understand the relationships between concepts.`;
+IMPORTANT:
+- Use • for main concepts (level 0)
+- Use - for sub-concepts (level 1) 
+- Use * for details/examples (level 2)
+- Keep concepts concise but include key connecting terms
+- Focus on relationships that span across different concept areas
+- Use terminology that will help identify conceptual connections
+
+Create a map where concepts naturally connect through shared terminology and relationships.`;
 
     const model = gemini.getGenerativeModel({ model: "gemini-1.5-flash" });
     const result = await model.generateContent(prompt);

@@ -4,10 +4,12 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { generateConceptMap } from "@/actions/study";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Network, Sparkles } from "lucide-react";
+import { Network, Sparkles, Eye, List } from "lucide-react";
+import VisualConceptMap from "./VisualConceptMap";
 
 interface ConceptMapGeneratorProps {
   userId: string;
@@ -59,7 +61,7 @@ export default function ConceptMapGenerator({ userId, subjectId, noteIds }: Conc
           Concept Map
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-7xl max-h-[95vh] overflow-y-auto" style={{ width: '90vw' }}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="size-5" />
@@ -86,29 +88,61 @@ export default function ConceptMapGenerator({ userId, subjectId, noteIds }: Conc
               </Button>
             </div>
           ) : (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Concept Map</CardTitle>
-                <CardDescription>
-                  Key concepts and their relationships
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2 font-mono text-sm whitespace-pre-wrap">
-                  {formatConceptMap(conceptMap)}
-                </div>
-                <div className="mt-4 flex items-center justify-center gap-2">
-                  <Button 
-                    onClick={() => setConceptMap("")} 
-                    variant="outline"
-                    className="gap-2"
-                  >
-                    <Sparkles className="size-4" />
-                    Generate New Map
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              <Tabs defaultValue="visual" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="visual" className="flex items-center gap-2">
+                    <Eye className="size-4" />
+                    Visual Map
+                  </TabsTrigger>
+                  <TabsTrigger value="text" className="flex items-center gap-2">
+                    <List className="size-4" />
+                    Text Outline
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="visual" className="space-y-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">Interactive Concept Map</CardTitle>
+                      <CardDescription>
+                        Drag nodes to reorganize • Zoom and pan to explore • Click controls for options
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <VisualConceptMap conceptMapText={conceptMap} className="h-[600px]" />
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+                
+                <TabsContent value="text" className="space-y-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">Concept Map Outline</CardTitle>
+                      <CardDescription>
+                        Hierarchical text representation of concepts and relationships
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2 font-mono text-sm whitespace-pre-wrap max-h-96 overflow-y-auto border rounded-lg p-4 bg-muted/20">
+                        {formatConceptMap(conceptMap)}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
+              
+              <div className="flex items-center justify-center gap-2">
+                <Button 
+                  onClick={() => setConceptMap("")} 
+                  variant="outline"
+                  className="gap-2"
+                >
+                  <Sparkles className="size-4" />
+                  Generate New Map
+                </Button>
+              </div>
+            </div>
           )}
         </div>
       </DialogContent>

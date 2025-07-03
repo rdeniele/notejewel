@@ -4,10 +4,13 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, Sparkles, BookOpen, Target, Network, Send, MessageCircle, RefreshCw, RotateCcw, Trophy, Star, PartyPopper } from "lucide-react";
+import { Loader2, Sparkles, BookOpen, Target, Network, Send, MessageCircle, RefreshCw, RotateCcw, Trophy, Star, PartyPopper, Eye, List } from "lucide-react";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import VisualConceptMap from "./VisualConceptMap";
 
 interface AIModalProps {
   isOpen: boolean;
@@ -628,7 +631,7 @@ Make sure each question has exactly 4 options (A, B, C, D) and tests something s
                 className="w-full justify-start h-auto p-4 text-left hover:bg-primary/5 hover:border-primary/50 transition-colors"
               >
                 <span className="font-mono mr-3 text-muted-foreground">
-                  {String.fromCharCode(65 + idx)})
+                  {String.fromCharCode(65 + idx)}
                 </span>
                 {opt}
               </Button>
@@ -651,7 +654,8 @@ Make sure each question has exactly 4 options (A, B, C, D) and tests something s
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-7xl max-h-[95vh] overflow-hidden flex flex-col"
+        style={{ width: '90vw' }}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             {getIcon()}
@@ -675,9 +679,54 @@ Make sure each question has exactly 4 options (A, B, C, D) and tests something s
               </div>
             ) : action === "quiz" ? (
               showQuizSetup ? renderQuizSetup() : renderQuiz()
-            ) : action === "studyPlan" || action === "conceptMap" ? (
+            ) : action === "studyPlan" ? (
               <div className="prose max-w-none whitespace-pre-wrap">
                 {aiResult}
+              </div>
+            ) : action === "conceptMap" ? (
+              <div className="space-y-6">
+                <Tabs defaultValue="visual" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="visual" className="flex items-center gap-2">
+                      <Eye className="size-4" />
+                      Visual Map
+                    </TabsTrigger>
+                    <TabsTrigger value="text" className="flex items-center gap-2">
+                      <List className="size-4" />
+                      Text Outline
+                    </TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="visual" className="space-y-4">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg">Interactive Concept Map</CardTitle>
+                        <CardDescription>
+                          Drag nodes to reorganize • Zoom and pan to explore • Click controls for options
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <VisualConceptMap conceptMapText={aiResult || ""} className="h-[600px]" />
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                  
+                  <TabsContent value="text" className="space-y-4">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg">Concept Map Outline</CardTitle>
+                        <CardDescription>
+                          Hierarchical text representation of concepts and relationships
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="prose max-w-none whitespace-pre-wrap max-h-96 overflow-y-auto border rounded-lg p-4 bg-muted/20">
+                          {aiResult}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                </Tabs>
               </div>
             ) : null}
           </div>

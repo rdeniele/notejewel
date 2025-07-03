@@ -44,6 +44,44 @@ export async function updateSession(request: NextRequest) {
       request.nextUrl.pathname === "/login" ||
       request.nextUrl.pathname === "/sign-up";
 
+    const isAdminRoute = request.nextUrl.pathname.startsWith("/admin");
+
+    // Admin route protection
+    if (isAdminRoute) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        return NextResponse.redirect(
+          new URL("/login", process.env.NEXT_PUBLIC_BASE_URL),
+        );
+      }
+
+      // Check if user is admin by checking the database
+      try {
+        const dbUser = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/check-admin?email=${user.email}`,
+        ).then(async (response) => {
+          if (!response.ok) {
+            return { isAdmin: false };
+          }
+          return await response.json();
+        });
+
+        if (!dbUser.isAdmin) {
+          return NextResponse.redirect(
+            new URL("/", process.env.NEXT_PUBLIC_BASE_URL),
+          );
+        }
+      } catch (error) {
+        console.error('Admin check error:', error);
+        return NextResponse.redirect(
+          new URL("/", process.env.NEXT_PUBLIC_BASE_URL),
+        );
+      }
+    }
+
     if (isAuthRoute) {
       const {
         data: { user },

@@ -11,6 +11,7 @@ model User {
   id                   String           @id @default(uuid())
   email                String           @unique
   displayName          String?
+  role                 UserRole         @default(USER)
   studyStyle           StudyStyle       @default(READING)
   dailyStudyTime       Int              @default(60)
   streakCount          Int              @default(0)
@@ -108,6 +109,11 @@ model Motivation {
   id     String @id @default(uuid())
   quote  String
   author String
+}
+
+enum UserRole {
+  USER
+  ADMIN
 }
 
 enum StudyStyle {
