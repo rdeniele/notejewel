@@ -162,6 +162,18 @@ async function HomePage({searchParams}:Props){
   if (!user) {
     return (
       <div className="flex h-full flex-col gap-4 sm:gap-6 p-3 sm:p-6">
+        {/* Promotional Strip */}
+        <div className="w-full bg-gradient-to-r from-primary to-primary/80 text-primary-foreground">
+          <div className="max-w-7xl mx-auto px-4 py-2 text-center">
+            <p className="text-sm font-medium">
+              🎉 Limited Time: First 100 users get 3 months of Premium FREE! 
+              <span className="ml-2 px-2 py-1 bg-white/20 rounded-full text-xs font-semibold">
+                Join Now
+              </span>
+            </p>
+          </div>
+        </div>
+        
         {/* Hero Section */}
         <div className="flex-1 flex items-center justify-center relative">
           {/* Background Pattern */}
