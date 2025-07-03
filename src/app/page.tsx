@@ -10,6 +10,7 @@ import { updateUserStreak } from "@/actions/users";
 import { getUserBillingInfo } from "@/actions/billing";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Metadata } from "next";
+import Image from "next/image";
 
 export const metadata: Metadata = {
   title: "NoteJewel - AI-Powered Study Assistant | Smart Note-Taking & Learning Tools",
@@ -456,7 +457,13 @@ async function HomePage({searchParams}:Props){
               <div className="grid md:grid-cols-3 gap-8">
                 <div className="bg-muted/30 border border-border rounded-xl overflow-hidden shadow-sm flex flex-col">
                   <a href="/blog/blog1">
-                    <img src="https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=800&q=80" alt="How AI is Revolutionizing Student Learning" className="w-full h-48 object-cover" />
+                    <Image 
+                      src="https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=800&q=80" 
+                      alt="How AI is Revolutionizing Student Learning" 
+                      width={800}
+                      height={400}
+                      className="w-full h-48 object-cover" 
+                    />
                   </a>
                   <div className="p-6 flex-1 flex flex-col">
                     <h3 className="text-lg font-semibold mb-2">
@@ -468,7 +475,13 @@ async function HomePage({searchParams}:Props){
                 </div>
                 <div className="bg-muted/30 border border-border rounded-xl overflow-hidden shadow-sm flex flex-col">
                   <a href="/blog/blog2">
-                    <img src="https://images.unsplash.com/photo-1513258496099-48168024aec0?auto=format&fit=crop&w=800&q=80" alt="5 Proven Study Techniques Backed by Science" className="w-full h-48 object-cover" />
+                    <Image 
+                      src="https://images.unsplash.com/photo-1513258496099-48168024aec0?auto=format&fit=crop&w=800&q=80" 
+                      alt="5 Proven Study Techniques Backed by Science" 
+                      width={800}
+                      height={400}
+                      className="w-full h-48 object-cover" 
+                    />
                   </a>
                   <div className="p-6 flex-1 flex flex-col">
                     <h3 className="text-lg font-semibold mb-2">
@@ -480,7 +493,13 @@ async function HomePage({searchParams}:Props){
                 </div>
                 <div className="bg-muted/30 border border-border rounded-xl overflow-hidden shadow-sm flex flex-col">
                   <a href="/blog/blog3">
-                    <img src="https://images.unsplash.com/photo-1503676382389-4809596d5290?auto=format&fit=crop&w=800&q=80" alt="The Power of Spaced Repetition for Long-Term Memory" className="w-full h-48 object-cover" />
+                    <Image 
+                      src="https://images.unsplash.com/photo-1503676382389-4809596d5290?auto=format&fit=crop&w=800&q=80" 
+                      alt="The Power of Spaced Repetition for Long-Term Memory" 
+                      width={800}
+                      height={400}
+                      className="w-full h-48 object-cover" 
+                    />
                   </a>
                   <div className="p-6 flex-1 flex flex-col">
                     <h3 className="text-lg font-semibold mb-2">
