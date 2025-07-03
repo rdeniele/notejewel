@@ -19,7 +19,7 @@ function Footer() {
         <ins className="adsbygoogle"
           style={{ display: 'block', width: '100%', minHeight: 90 }}
           data-ad-client="ca-pub-4143521375584293"
-          data-ad-slot="YOUR_SLOT_ID"
+          data-ad-slot="5678901234"
           data-ad-format="auto"
           data-full-width-responsive="true"
         ></ins>

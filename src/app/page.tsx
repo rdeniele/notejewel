@@ -79,6 +79,22 @@ export const metadata: Metadata = {
   },
 };
 
+// AdSense Ad Component
+function AdSenseAd({ slot, format = "auto", responsive = true }: { slot: string; format?: string; responsive?: boolean }) {
+  return (
+    <div className="w-full flex justify-center my-8">
+      <ins 
+        className="adsbygoogle"
+        style={{ display: 'block' }}
+        data-ad-client="ca-pub-4143521375584293"
+        data-ad-slot={slot}
+        data-ad-format={format}
+        data-full-width-responsive={responsive.toString()}
+      />
+    </div>
+  );
+}
+
 // Type for the auth user
 export type AuthUser = {
   id: string;
@@ -164,7 +180,8 @@ async function HomePage({searchParams}:Props){
 
   if (!user) {
     return (
-      <div className="flex h-full flex-col gap-4 sm:gap-6 p-3 sm:p-6">
+      <>
+        <div className="flex h-full flex-col gap-4 sm:gap-6 p-3 sm:p-6">
         {/* Promotional Strip */}
         <div className="w-full bg-gradient-to-r from-primary to-primary/80 text-primary-foreground">
           <div className="max-w-7xl mx-auto px-4 py-2 text-center">
@@ -392,8 +409,10 @@ async function HomePage({searchParams}:Props){
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+          </div>            </div>
+
+            {/* AdSense Ad - After Pricing Section */}
+            <AdSenseAd slot="1234567890" />
 
             {/* Feature Highlights */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-20">
@@ -588,6 +607,9 @@ async function HomePage({searchParams}:Props){
               </div>
             </div>
 
+            {/* AdSense Ad - Between Testimonials and Blog */}
+            <AdSenseAd slot="2345678901" />
+
             {/* Blog Section */}
             <div className="mt-24">
               <div className="text-center mb-12">
@@ -677,6 +699,9 @@ async function HomePage({searchParams}:Props){
               <p className="text-xs text-muted-foreground mt-4">No credit card required • Basic features are free</p>
             </div>
 
+            {/* AdSense Ad - Before Footer */}
+            <AdSenseAd slot="3456789012" format="rectangle" />
+
             {/* Footer */}
             <footer className="mt-24 text-center py-8 border-t border-border">
               <p className="text-muted-foreground">
@@ -713,7 +738,16 @@ async function HomePage({searchParams}:Props){
                 })
               }}
             />
-      </div>
+
+            <script 
+              dangerouslySetInnerHTML={{
+                __html: `
+                  (adsbygoogle = window.adsbygoogle || []).push({});
+                `
+              }}
+            />
+        </div>
+      </>
     );
   }
 
@@ -986,6 +1020,12 @@ async function HomePage({searchParams}:Props){
                 </div>
               </div>
             </div>
+
+            {/* AdSense Ad for Free Users Only */}
+            {billingInfo.planType === "FREE" && (
+              <AdSenseAd slot="4567890123" />
+            )}
+
           <NotesPage 
             notes={allNotes}
             selectedNoteId=""
@@ -1059,6 +1099,15 @@ async function HomePage({searchParams}:Props){
 
       {/* Floating Pomodoro Timer */}
       <FloatingPomodoroTimer />
+
+      {/* AdSense Initialization Script */}
+      <script 
+        dangerouslySetInnerHTML={{
+          __html: `
+            (adsbygoogle = window.adsbygoogle || []).push({});
+          `
+        }}
+      />
       </div>
     </PomodoroProvider>
   )
