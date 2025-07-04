@@ -188,4 +188,62 @@
     margin-top: 2rem !important;
     margin-bottom: 1rem !important;
   }
+
+  /* Mobile Touch Improvements */
+  @media (hover: none) and (pointer: coarse) {
+    /* Mobile device styles */
+    .touch-manipulation {
+      touch-action: manipulation;
+    }
+    
+    /* Ensure buttons are large enough for touch */
+    button, 
+    [role="button"],
+    .btn {
+      min-height: 44px;
+      min-width: 44px;
+    }
+    
+    /* Better tap targets for small elements */
+    .tap-target {
+      min-height: 44px;
+      min-width: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    /* Prevent zoom on input focus */
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    textarea,
+    select {
+      font-size: 16px;
+    }
+    
+    /* Improve dialog/modal experience on mobile */
+    [data-radix-popper-content-wrapper] {
+      max-width: 95vw !important;
+    }
+    
+    /* Better scroll behavior on mobile */
+    .mobile-scroll {
+      -webkit-overflow-scrolling: touch;
+      overflow-y: auto;
+    }
+  }
+
+  /* General improvements for all devices */
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+
+  /* Prevent text selection on buttons */
+  button {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
 }

@@ -683,10 +683,9 @@ Make sure each question has exactly 4 options (A, B, C, D) and tests something s
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-7xl h-[90vh] overflow-hidden flex flex-col"
-        style={{ width: '90vw' }}>
-        <DialogHeader className="flex-shrink-0">
-          <DialogTitle className="flex items-center gap-2 text-xl">
+      <DialogContent className="w-[95vw] max-w-7xl h-[90vh] max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogHeader className="flex-shrink-0 pb-2">
+          <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl">
             {getIcon()}
             {action === "summarize" && "Summary"}
             {action === "quiz" && "Quiz Me"}
