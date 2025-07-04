@@ -80,7 +80,18 @@ export const metadata: Metadata = {
 };
 
 // AdSense Ad Component
-function AdSenseAd({ slot, format = "auto", responsive = true }: { slot: string; format?: string; responsive?: boolean }) {
+function AdSenseAd({ slot, format = "auto", responsive = true, showForPremium = false }: { 
+  slot: string; 
+  format?: string; 
+  responsive?: boolean; 
+  showForPremium?: boolean;
+}) {
+  // If this ad should not show for premium users, don't render anything
+  // This will be controlled by the parent component based on user plan
+  if (!showForPremium) {
+    return null;
+  }
+  
   return (
     <div className="w-full flex justify-center my-8">
       <ins 
@@ -412,7 +423,7 @@ async function HomePage({searchParams}:Props){
           </div>            </div>
 
             {/* AdSense Ad - After Pricing Section */}
-            <AdSenseAd slot="1234567890" />
+            <AdSenseAd slot="1234567890" showForPremium={true} />
 
             {/* Feature Highlights */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-20">
@@ -608,7 +619,7 @@ async function HomePage({searchParams}:Props){
             </div>
 
             {/* AdSense Ad - Between Testimonials and Blog */}
-            <AdSenseAd slot="2345678901" />
+            <AdSenseAd slot="2345678901" showForPremium={true} />
 
             {/* Blog Section */}
             <div className="mt-24">
@@ -700,13 +711,24 @@ async function HomePage({searchParams}:Props){
             </div>
 
             {/* AdSense Ad - Before Footer */}
-            <AdSenseAd slot="3456789012" format="rectangle" />
+            <AdSenseAd slot="3456789012" format="rectangle" showForPremium={true} />
 
             {/* Footer */}
             <footer className="mt-24 text-center py-8 border-t border-border">
-              <p className="text-muted-foreground">
-                NoteJewel © {new Date().getFullYear()}
-              </p>
+              <div className="flex flex-col items-center space-y-4">
+                <div className="flex items-center space-x-4 text-sm">
+                  <a href="/terms" className="text-muted-foreground hover:text-primary transition-colors">
+                    Terms & Conditions
+                  </a>
+                  <span className="text-muted-foreground">•</span>
+                  <a href="/privacy" className="text-muted-foreground hover:text-primary transition-colors">
+                    Privacy Policy
+                  </a>
+                </div>
+                <p className="text-muted-foreground">
+                  NoteJewel © {new Date().getFullYear()}
+                </p>
+              </div>
             </footer>
 
             {/* Structured Data for SEO */}
@@ -1022,9 +1044,7 @@ async function HomePage({searchParams}:Props){
             </div>
 
             {/* AdSense Ad for Free Users Only */}
-            {billingInfo.planType === "FREE" && (
-              <AdSenseAd slot="4567890123" />
-            )}
+            <AdSenseAd slot="4567890123" showForPremium={billingInfo.planType === "FREE"} />
 
           <NotesPage 
             notes={allNotes}
