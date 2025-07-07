@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import gemini from "@/gemini";
 import NoteViewModal from "./NoteViewModal";
 import AIModal from "./AIModal";
+import FlashcardModal from "./FlashcardModal";
 import { checkUserUsageLimit, incrementUsage } from "@/actions/billing";
 import "@/styles/study-plan.css";
 
@@ -64,6 +65,12 @@ export default function NotesCardGrid({
   const [aiResult, setAiResult] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
 
+  // Flashcard Modal state
+  const [flashcardModalOpen, setFlashcardModalOpen] = useState(false);
+  const [flashcardModalNote, setFlashcardModalNote] = useState<Note | null>(null);
+  const [flashcardResult, setFlashcardResult] = useState<string | null>(null);
+  const [flashcardLoading, setFlashcardLoading] = useState(false);
+
   const handleAIAction = async (note: Note, action: "summarize" | "quiz" | "studyPlan" | "conceptMap") => {
     // Check if user is logged in
     if (!user) {
@@ -77,25 +84,23 @@ export default function NotesCardGrid({
         toast.error("Study plans and concept maps are available on Pro and Premium plans");
         return;
       }
-    }
 
-    // Check usage limits
-    try {
-      const usageCheck = await checkUserUsageLimit(user.id);
-      if (!usageCheck.canGenerate) {
-        if (billingInfo?.planType === "FREE") {
-          toast.error(`Daily limit reached (${billingInfo.limit} generations). Upgrade to Pro for 30 daily generations!`);
-        } else if (billingInfo?.planType === "BASIC") {
-          toast.error(`Daily limit reached (${billingInfo.limit} generations). Upgrade to Premium for unlimited access!`);
-        } else {
-          toast.error("Daily limit reached. Please try again tomorrow.");
+      // Check usage limits only for advanced features
+      try {
+        const usageCheck = await checkUserUsageLimit(user.id);
+        if (!usageCheck.canGenerate) {
+          if (billingInfo?.planType === "BASIC") {
+            toast.error(`Daily limit reached (${billingInfo.limit} generations). Upgrade to Premium for unlimited access!`);
+          } else {
+            toast.error("Daily limit reached. Please try again tomorrow.");
+          }
+          return;
         }
+      } catch (error) {
+        console.error("Error checking usage limit:", error);
+        toast.error("Unable to check usage limit. Please try again.");
         return;
       }
-    } catch (error) {
-      console.error("Error checking usage limit:", error);
-      toast.error("Unable to check usage limit. Please try again.");
-      return;
     }
 
     setAiModalNote(note);
@@ -189,6 +194,20 @@ Only return the HTML table, no additional text or formatting.`;
     } finally {
       setAiLoading(false);
     }
+  };
+
+  const handleFlashcardAction = async (note: Note) => {
+    // Check if user is logged in
+    if (!user) {
+      toast.error("Please sign in to use AI features");
+      return;
+    }
+
+    // Flashcards are free for all users - no usage limit check needed
+    setFlashcardModalNote(note);
+    setFlashcardModalOpen(true);
+    setFlashcardResult(null);
+    setFlashcardLoading(false);
   };
 
   const truncateContent = (content: string, maxLength: number = 150) => {
@@ -396,6 +415,24 @@ Only return the HTML table, no additional text or formatting.`;
                     variant="outline"
                     onClick={(e) => {
                       e.stopPropagation();
+                      handleFlashcardAction(note);
+                    }}
+                    disabled={flashcardLoading && flashcardModalNote?.id === note.id}
+                    className="text-xs h-8"
+                  >
+                    {flashcardLoading && flashcardModalNote?.id === note.id ? (
+                      <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Brain className="w-3 h-3 mr-1" />
+                    )}
+                    Flashcards
+                  </Button>
+                  
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.stopPropagation();
                       handleAIAction(note, 'studyPlan');
                     }}
                     disabled={aiLoading && aiModalNote?.id === note.id || billingInfo?.planType === "FREE"}
@@ -470,6 +507,20 @@ Only return the HTML table, no additional text or formatting.`;
           // Handle quiz answer
         }}
       />
+      
+      {/* Flashcard Modal */}
+      <FlashcardModal
+        isOpen={flashcardModalOpen}
+        onClose={() => {
+          setFlashcardModalOpen(false);
+          setFlashcardModalNote(null);
+          setFlashcardResult(null);
+        }}
+        noteTitle={flashcardModalNote?.title || ""}
+        noteContent={flashcardModalNote?.content || ""}
+        aiResult={flashcardResult}
+        isLoading={flashcardLoading}
+      />
     </>
   );
-} 
+}

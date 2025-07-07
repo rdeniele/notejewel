@@ -224,13 +224,13 @@ export async function getUserBillingInfo(userId: string) {
 function getPlanLimit(planType: "FREE" | "BASIC" | "PREMIUM"): number {
   switch (planType) {
     case "FREE":
-      return 5;
+      return 50; // Increased from 5 to 50 for flashcards, quiz, and summarize
     case "BASIC":
-      return 30;
+      return 100;
     case "PREMIUM":
       return Infinity;
     default:
-      return 5;
+      return 50;
   }
 }
 

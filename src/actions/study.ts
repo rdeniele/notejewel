@@ -140,13 +140,7 @@ export async function generateQuiz(
   noteIds?: string[]
 ) {
   try {
-    // Check usage limit first - using temporary billing functions
-    const { checkUserUsageLimit, incrementUsage } = await import("@/actions/billing");
-    const usageCheck = await checkUserUsageLimit(userId);
-    
-    if (!usageCheck.canGenerate) {
-      throw new Error(`Daily limit reached. You have ${usageCheck.remaining} generations remaining.`);
-    }
+    // Quiz generation is now free for all users - no usage limit check needed
 
     let notesContent = "";
     
@@ -219,8 +213,7 @@ Make the questions challenging but fair, covering different aspects of the mater
       },
     });
 
-    // Increment usage count - using temporary billing functions
-    await incrementUsage(userId);
+    // Quiz is free - no usage increment needed
 
     return quiz;
   } catch (error) {

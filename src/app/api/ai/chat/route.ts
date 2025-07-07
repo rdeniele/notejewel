@@ -10,20 +10,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Check usage limit first
-    const usageCheck = await checkUserUsageLimit(user.id);
-    if (!usageCheck.canGenerate) {
-      return NextResponse.json({ 
-        error: `Daily limit reached. You have ${usageCheck.remaining} generations remaining.`,
-        limitReached: true,
-        remaining: usageCheck.remaining
-      }, { status: 429 });
-    }
-
     const { message, noteContent, noteTitle, action, conversationHistory } = await request.json();
 
     if (!message || !noteContent) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    // Only check usage limits for advanced features (studyPlan, conceptMap)
+    const isAdvancedFeature = action === 'studyPlan' || action === 'conceptMap';
+    
+    if (isAdvancedFeature) {
+      // Check usage limit for advanced features
+      const usageCheck = await checkUserUsageLimit(user.id);
+      if (!usageCheck.canGenerate) {
+        return NextResponse.json({ 
+          error: `Daily limit reached. You have ${usageCheck.remaining} generations remaining.`,
+          limitReached: true,
+          remaining: usageCheck.remaining
+        }, { status: 429 });
+      }
     }
 
     const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
@@ -54,8 +59,10 @@ Please provide a helpful, accurate response based on the study material provided
     const response = await result.response;
     const responseText = response.text();
 
-    // Increment usage count after successful generation
-    await incrementUsage(user.id);
+    // Only increment usage count for advanced features
+    if (isAdvancedFeature) {
+      await incrementUsage(user.id);
+    }
 
     return NextResponse.json({
       success: true,
