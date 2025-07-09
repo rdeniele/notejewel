@@ -4,6 +4,7 @@ import { getUser } from "@/auth/server";
 import { prisma } from "@/db/prisma";
 import { handleError } from "@/lib/utils";
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { randomUUID } from 'crypto';
 
 export const createNoteAction = async (noteId: string) => {
   try {
@@ -46,7 +47,7 @@ export const createNoteWithContent = async (data: {
     // Use Prisma client with proper authentication context
     const note = await prisma.note.create({
       data: {
-        id: crypto.randomUUID(),
+        id: randomUUID(),
         title: data.title,
         text: data.text,
         authorId: user.id,
