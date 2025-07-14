@@ -204,17 +204,11 @@ export default function NewNoteModal({
                   <SelectValue placeholder="Select a subject" />
                 </SelectTrigger>
                 <SelectContent>
-                  {subjects.length === 0 ? (
-                    <SelectItem value="" disabled>
-                      No subjects available. Please create a subject first.
+                  {subjects.map((subject) => (
+                    <SelectItem key={subject.id} value={subject.id}>
+                      {subject.name}
                     </SelectItem>
-                  ) : (
-                    subjects.map((subject) => (
-                      <SelectItem key={subject.id} value={subject.id}>
-                        {subject.name}
-                      </SelectItem>
-                    ))
-                  )}
+                  ))}
                 </SelectContent>
               </Select>
               {subjects.length === 0 && (
