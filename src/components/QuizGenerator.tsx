@@ -156,8 +156,8 @@ export default function QuizGenerator({ userId, subjectId, noteIds }: QuizGenera
           Quiz Me
         </Button>
       </DialogTrigger>
-      <DialogContent className="w-[95vw] max-w-4xl max-h-[95vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="w-[95vw] max-w-4xl h-[95vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2 text-lg">
             <Sparkles className="size-5" />
             AI Quiz
@@ -167,127 +167,154 @@ export default function QuizGenerator({ userId, subjectId, noteIds }: QuizGenera
           </DialogDescription>
         </DialogHeader>
 
-        {!showResults ? (
-          <div className="space-y-4 p-1">
-            {/* Progress */}
-            <div className="flex items-center justify-between text-sm bg-muted/50 p-3 rounded-lg">
-              <span className="font-medium">Question {currentQuestion + 1} of {quiz.questions.length}</span>
-              <span className="text-primary font-semibold">{Math.round(((currentQuestion + 1) / quiz.questions.length) * 100)}%</span>
-            </div>
+        <div className="flex-1 min-h-0 overflow-hidden">
+          {!showResults ? (
+            <div className="h-full overflow-y-auto space-y-4 p-1">
+              {/* Progress */}
+              <div className="flex items-center justify-between text-sm bg-muted/50 p-3 rounded-lg">
+                <span className="font-medium">Question {currentQuestion + 1} of {quiz.questions.length}</span>
+                <span className="text-primary font-semibold">{Math.round(((currentQuestion + 1) / quiz.questions.length) * 100)}%</span>
+              </div>
 
-            {/* Question */}
-            <Card className="border-2">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base sm:text-lg leading-relaxed">
-                  {quiz.questions[currentQuestion].question}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {Object.entries(quiz.questions[currentQuestion].options).map(([key, value]) => (
-                  <Button
-                    key={key}
-                    variant={selectedAnswers[currentQuestion] === key ? "default" : "outline"}
-                    className="w-full justify-start min-h-[52px] p-4 text-left touch-manipulation text-sm sm:text-base"
-                    onClick={() => handleAnswerSelect(key)}
-                  >
-                    <span className="font-semibold mr-3 text-base">{key}.</span>
-                    <span className="leading-relaxed">{value}</span>
-                  </Button>
-                ))}
-              </CardContent>
-            </Card>
+              {/* Question */}
+              <Card className="border-2">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base sm:text-lg leading-relaxed">
+                    {quiz.questions[currentQuestion].question}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {Object.entries(quiz.questions[currentQuestion].options).map(([key, value]) => (
+                    <Button
+                      key={key}
+                      variant={selectedAnswers[currentQuestion] === key ? "default" : "outline"}
+                      className="w-full justify-start min-h-[52px] p-4 text-left touch-manipulation text-sm sm:text-base"
+                      onClick={() => handleAnswerSelect(key)}
+                    >
+                      <span className="font-semibold mr-3 text-base">{key}.</span>
+                      <span className="leading-relaxed">{value}</span>
+                    </Button>
+                  ))}
+                </CardContent>
+              </Card>
 
-            {/* Navigation */}
-            <div className="flex items-center justify-between gap-3 pt-2">
-              <Button
-                variant="outline"
-                onClick={handlePreviousQuestion}
-                disabled={currentQuestion === 0}
-                className="min-h-[48px] px-6 touch-manipulation"
-              >
-                Previous
-              </Button>
-              <Button
-                onClick={handleNextQuestion}
-                disabled={!selectedAnswers[currentQuestion]}
-                className="min-h-[48px] px-6 touch-manipulation"
-              >
-                {currentQuestion === quiz.questions.length - 1 ? "See Results" : "Next"}
-              </Button>
+              {/* Navigation */}
+              <div className="flex items-center justify-between gap-3 pt-2">
+                <Button
+                  variant="outline"
+                  onClick={handlePreviousQuestion}
+                  disabled={currentQuestion === 0}
+                  className="min-h-[48px] px-6 touch-manipulation"
+                >
+                  Previous
+                </Button>
+                <Button
+                  onClick={handleNextQuestion}
+                  disabled={!selectedAnswers[currentQuestion]}
+                  className="min-h-[48px] px-6 touch-manipulation"
+                >
+                  {currentQuestion === quiz.questions.length - 1 ? "See Results" : "Next"}
+                </Button>
+              </div>
             </div>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {/* Results Summary */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Quiz Results</CardTitle>
-                <CardDescription>
-                  You scored {getScore()}% ({quiz.questions.filter((_, i) => 
-                    selectedAnswers[i] === quiz.questions[i].correctAnswer
-                  ).length} out of {quiz.questions.length} correct)
-                </CardDescription>
-              </CardHeader>
-            </Card>
+          ) : (
+            <div className="h-full flex flex-col">
+              {/* Results Summary - Fixed at top */}
+              <Card className="mb-4 flex-shrink-0">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg">Quiz Results</CardTitle>
+                  <CardDescription>
+                    You scored {getScore()}% ({quiz.questions.filter((_, i) => 
+                      selectedAnswers[i] === quiz.questions[i].correctAnswer
+                    ).length} out of {quiz.questions.length} correct)
+                  </CardDescription>
+                </CardHeader>
+              </Card>
 
-            {/* Question Review */}
-            <div className="space-y-4">
-              {quiz.questions.map((question, index) => (
-                <Card key={index} className={`border-l-4 ${
-                  getQuestionStatus(index) === "correct" ? "border-l-green-500" :
-                  getQuestionStatus(index) === "incorrect" ? "border-l-red-500" :
-                  "border-l-gray-300"
-                }`}>
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <CardTitle className="text-base">
-                        Question {index + 1}
-                      </CardTitle>
-                      {getQuestionStatus(index) === "correct" ? (
-                        <CheckCircle className="size-5 text-green-500" />
-                      ) : getQuestionStatus(index) === "incorrect" ? (
-                        <XCircle className="size-5 text-red-500" />
-                      ) : (
-                        <HelpCircle className="size-5 text-gray-400" />
-                      )}
-                    </div>
-                    <p className="text-sm">{question.question}</p>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    <div className="text-sm">
-                      <strong>Your answer:</strong> {selectedAnswers[index] || "Not answered"}
-                    </div>
-                    <div className="text-sm">
-                      <strong>Correct answer:</strong> {question.correctAnswer}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      <strong>Explanation:</strong> {question.explanation}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+              {/* Scrollable Question Review */}
+              <div className="flex-1 min-h-0 flex flex-col">
+                <h3 className="font-semibold text-sm text-muted-foreground mb-3 flex-shrink-0">Question Review:</h3>
+                <div className="flex-1 overflow-y-scroll border-2 border-dashed border-gray-300 rounded-lg bg-gray-50/30 min-h-[300px] max-h-[500px]" style={{
+                  scrollbarWidth: 'thin',
+                  scrollbarColor: '#cbd5e1 #f1f5f9'
+                }}>
+                  <div className="p-4 space-y-4">
+                    {quiz.questions.map((question, index) => (
+                      <Card key={index} className={`border-l-4 bg-white ${
+                        getQuestionStatus(index) === "correct" ? "border-l-green-500 shadow-green-100" :
+                        getQuestionStatus(index) === "incorrect" ? "border-l-red-500 shadow-red-100" :
+                        "border-l-gray-300"
+                      }`}>
+                        <CardHeader className="pb-2">
+                          <div className="flex items-start justify-between gap-2">
+                            <CardTitle className="text-sm font-medium leading-relaxed">
+                              Q{index + 1}: {question.question}
+                            </CardTitle>
+                            {getQuestionStatus(index) === "correct" ? (
+                              <div className="flex items-center gap-1 text-green-600 flex-shrink-0">
+                                <CheckCircle className="size-4" />
+                                <span className="text-xs font-medium">Correct</span>
+                              </div>
+                            ) : getQuestionStatus(index) === "incorrect" ? (
+                              <div className="flex items-center gap-1 text-red-600 flex-shrink-0">
+                                <XCircle className="size-4" />
+                                <span className="text-xs font-medium">Incorrect</span>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-1 text-gray-400 flex-shrink-0">
+                                <HelpCircle className="size-4" />
+                                <span className="text-xs">Skipped</span>
+                              </div>
+                            )}
+                          </div>
+                        </CardHeader>
+                        <CardContent className="space-y-3 pt-0">
+                          <div className="grid grid-cols-1 gap-2 text-sm">
+                            <div>
+                              <span className="font-semibold text-gray-700">Your answer: </span>
+                              <span className={getQuestionStatus(index) === "correct" ? "text-green-600 font-medium" : "text-red-600 font-medium"}>
+                                {selectedAnswers[index] || "Not answered"}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="font-semibold text-gray-700">Correct answer: </span>
+                              <span className="text-green-600 font-medium">{question.correctAnswer}</span>
+                            </div>
+                            {question.explanation && (
+                              <div className="pt-2 border-t border-gray-100">
+                                <span className="font-semibold text-gray-700">Explanation: </span>
+                                <p className="text-gray-600 mt-1 leading-relaxed">{question.explanation}</p>
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              </div>
 
-            {/* Actions */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
-              <Button 
-                onClick={handleRetakeQuiz} 
-                variant="outline" 
-                className="gap-2 min-h-[48px] w-full sm:w-auto touch-manipulation"
-              >
-                <RotateCcw className="size-4" />
-                Retake Quiz
-              </Button>
-              <Button 
-                onClick={() => setQuiz(null)} 
-                className="gap-2 min-h-[48px] w-full sm:w-auto touch-manipulation"
-              >
-                <Sparkles className="size-4" />
-                New Quiz
-              </Button>
+              {/* Actions - Fixed at bottom */}
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4 mt-4 border-t bg-background flex-shrink-0">
+                <Button 
+                  onClick={handleRetakeQuiz} 
+                  variant="outline" 
+                  className="gap-2 min-h-[48px] w-full sm:w-auto touch-manipulation"
+                >
+                  <RotateCcw className="size-4" />
+                  Retake Quiz
+                </Button>
+                <Button 
+                  onClick={() => setQuiz(null)} 
+                  className="gap-2 min-h-[48px] w-full sm:w-auto touch-manipulation"
+                >
+                  <Sparkles className="size-4" />
+                  New Quiz
+                </Button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );
